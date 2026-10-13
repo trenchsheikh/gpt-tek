@@ -1230,3 +1230,114 @@ footer button {
 .run-button {
   margin-right: 9px;
 }
+/* Compact workspace, separate from the public landing page. */
+.app aside {
+  width: 216px;
+  padding-top: 23px;
+}
+.app .main {
+  margin-left: 216px;
+}
+.app header {
+  height: 65px;
+  padding: 0 30px;
+}
+.app main {
+  max-width: 1160px;
+  padding: 32px 34px 0;
+}
+.app .brand {
+  font-size: 20px;
+  margin-bottom: 25px;
+}
+.app .brand img {
+  width: 27px;
+  height: 27px;
+}
+.app .eyebrow {
+  font-size: 8px;
+}
+.app-welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 23px 0 27px;
+}
+.app-welcome h1 {
+  font-size: 31px;
+  letter-spacing: -1.1px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.app-welcome p {
+  font-size: 12px;
+  margin: 0;
+}
+.app .intro-strip {
+  padding: 15px 0;
+}
+.app .market {
+  margin-top: 27px;
+}
+.app .section-heading h2 {
+  font-size: 20px;
+}
+.app .templates {
+  margin-top: 27px;
+}
+.app .template {
+  padding: 19px;
+}
+.app .template-icon {
+  margin-bottom: 15px;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+}
+.app .template p {
+  margin-bottom: 16px;
+}
+.app .empty {
+  padding: 25px 20px;
+}
+.app .page-title {
+  font-size: 34px;
+}
+.app .chat {
+  min-height: calc(100vh - 65px);
+  padding-bottom: 25px;
+}
+.app .hero-art {
+  display: none;
+}
+@media (max-width: 760px) {
+  .app .main {
+    margin-left: 0;
+  }
+  .app aside {
+    width: 216px;
+  }
+  .app header {
+    padding: 0 18px;
+  }
+  .app main {
+    padding: 24px 20px 0;
+  }
+  .app-welcome {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 19px 0 23px;
+  }
+  .app-welcome h1 {
+    font-size: 29px;
+  }
+  .app .intro-strip {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    font-size: 10px;
+  }
+  .app .chat {
+    padding-bottom: 20px;
+  }
+}

@@ -4,6 +4,8 @@ The decentralized intelligence core for Solana. Bring your ChatGPT account, buil
 
 A Next.js application with a responsive OpenAI-inspired workspace, the supplied GPT Tek logo and favicon, subtle animation, dark mode, discovery filters, creation templates, creator dashboard, rental history, and an agent research composer. No seeded agents, fabricated performance metrics, or simulated payments.
 
+The public landing page is at `/`; the compact agent workspace is at `/app`. Sign-in returns to the workspace, with a dedicated recovery page for authentication errors.
+
 ## Run
 
 Requires Node.js 22 or newer and PostgreSQL.
@@ -21,7 +23,7 @@ Generate AUTH_SECRET with `openssl rand -base64 32`. Use a persistent hosted Pos
 ## Functional flows
 
 - **Wallet identity:** Phantom signs a domain-bound nonce; Ed25519 verification creates an Auth.js session. Challenges are stored in PostgreSQL, expire after five minutes, and are consumed once.
-- **ChatGPT identity:** Auth.js OpenID Connect with PKCE, state and nonce checks, discovery and ID token verification. Set `OPENAI_CLIENT_ID` and, for confidential clients, `OPENAI_CLIENT_SECRET`. Register the exact callback `https://YOUR_DOMAIN/api/auth/callback/openai`. The button remains visibly unavailable without a registered client.
+- **ChatGPT identity:** Auth.js OpenID Connect with PKCE, state and nonce checks, discovery and ID token verification. Set `OPENAI_CLIENT_ID` and, for confidential clients, `OPENAI_CLIENT_SECRET`. For the current deployment, register the exact callback `https://gpt-tek.vercel.app/api/auth/callback/openai`. The production AUTH_URL is set to the same canonical origin. Confidential clients use `client_secret_basic` as documented by OpenAI; public clients use `none`. The button remains visibly unavailable without a registered client.
 - **Agent creation:** authenticated owners save private strategy instructions and a payout wallet. Listings can be published or unlisted. Public marketplace responses omit private strategy instructions.
 - **Mint:** after creation, owners can approve a 1/1 SPL token mint in Phantom. The transaction creates the mint, initializes its associated token account, issues one token, revokes the mint authority, and writes the agent ID and SHA-256 strategy hash in a Solana memo. Verification checks the mint supply, decimals, revoked authorities, recipient account, creator signature and memo. These are token receipts, not Metaplex artwork NFTs. Database ownership does not transfer when the receipt token transfers.
 - **Rent:** select 1–168 hours and approve a direct transfer to the creator. The server verifies exact lamports, sender, recipient, rental-specific memo, signer, confirmation status and transaction age. A unique database constraint prevents reusing a signature. Access begins after verification and expires according to the server clock.

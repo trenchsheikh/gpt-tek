@@ -7,6 +7,7 @@ import { PublicKey } from "@solana/web3.js";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   session: { strategy: "jwt" },
+  pages: { error: "/sign-in" },
   providers: [
     Credentials({
       id: "wallet",
@@ -53,7 +54,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             )[],
             client: {
               token_endpoint_auth_method: process.env.OPENAI_CLIENT_SECRET
-                ? "client_secret_post"
+                ? "client_secret_basic"
                 : "none",
             },
             profile(p: {

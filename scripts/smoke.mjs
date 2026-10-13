@@ -37,7 +37,13 @@ try {
   const base = "http://localhost:3210";
   const page = await fetch(base);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Intelligence,/);
+  assert.match(await page.text(), /Your strategy/);
+  const workspace = await fetch(base + "/app");
+  assert.equal(workspace.status, 200);
+  assert.match(await workspace.text(), /Find your next edge/);
+  const errorPage = await fetch(base + "/sign-in?error=Configuration");
+  assert.equal(errorPage.status, 200);
+  assert.match(await errorPage.text(), /provider needs to be configured/);
   const favicon = await fetch(base + "/favicon.png");
   assert.equal(favicon.status, 200);
   const status = await fetch(base + "/api/status");

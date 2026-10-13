@@ -154,8 +154,13 @@ export default function Workspace() {
     }
   }
   useEffect(() => {
+    const intent = new URLSearchParams(window.location.search);
     getSession()
-      .then(setSession)
+      .then((current) => {
+        setSession(current);
+        if (intent.has("create")) setModal(current ? "create" : "login");
+        else if (intent.has("signin")) setModal("login");
+      })
       .catch(() => setSession(null));
     api("/api/status")
       .then(setStatus)
@@ -252,7 +257,11 @@ export default function Workspace() {
           "Wallet sign-in failed. Request a new signature and retry.",
         );
       setSession(await getSession());
-      setModal(null);
+      setModal(
+        new URLSearchParams(window.location.search).has("create")
+          ? "create"
+          : null,
+      );
     });
   }
   function navigate(v: string) {
@@ -409,37 +418,14 @@ export default function Workspace() {
             <div className="eyebrow">
               <span /> THE INTELLIGENCE LAYER FOR SOLANA
             </div>
-            <section className="hero">
-              <h1>
-                Intelligence,
-                <br />
-                on your terms.
-              </h1>
-              <p>
-                Bring your ChatGPT account. Build a trading agent.
-                <br className="desktop" /> Share your edge, and get paid in SOL.
-              </p>
-              <div className="hero-actions">
-                <button className="black" onClick={() => create()}>
-                  Create your agent <Plus size={17} />
-                </button>
-                <button
-                  className="text-button"
-                  onClick={() => navigate("Guide")}
-                >
-                  How it works <ArrowUpRight size={16} />
-                </button>
+            <section className="app-welcome">
+              <div>
+                <h1>Find your next edge.</h1>
+                <p>Explore agents, or build one that thinks your way.</p>
               </div>
-              <div className="hero-art">
-                <div className="art-grid" />
-                <div className="art-ring ring-one" />
-                <div className="art-ring ring-two" />
-                <img src="/logo.png" alt="" />
-                <span className="art-tag top">
-                  <i /> Intelligence, connected
-                </span>
-                <span className="art-tag bottom">Built for Solana ↗</span>
-              </div>
+              <button className="black" onClick={() => create()}>
+                <Plus size={16} /> Create agent
+              </button>
             </section>
             <section className="intro-strip">
               <span>
@@ -1010,14 +996,14 @@ export default function Workspace() {
             {modal === "login" ? (
               <>
                 <img className="login-logo" src="/logo.png" alt="GPT Tek" />
-                <h2 id="modal-title">Your edge starts here.</h2>
+                <h2 id="modal-title">Welcome to GPT Tek.</h2>
                 <p>Sign in to build, publish, and rent agents.</p>
                 <button
                   className="black full"
                   disabled={busy || !status.chatgpt}
                   onClick={() =>
                     action(async () => {
-                      await signIn("openai");
+                      await signIn("openai", { redirectTo: "/app" });
                     })
                   }
                 >
