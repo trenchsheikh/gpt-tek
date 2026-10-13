@@ -1,4 +1,4 @@
-import Workspace from "../workspace";
-export default function AppPage() {
-  return <Workspace />;
+import Terminal from "../terminal";
+export default function Page() {
+  return <Terminal />;
 }

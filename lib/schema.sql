@@ -7,3 +7,7 @@ ALTER TABLE agents ADD COLUMN IF NOT EXISTS mint_address text UNIQUE;
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS mint_signature text UNIQUE;
 CREATE TABLE IF NOT EXISTS usage_limits (id text PRIMARY KEY, count integer NOT NULL, resets_at timestamptz NOT NULL);
 ALTER TABLE agents ADD COLUMN IF NOT EXISTS mint_prepared_at timestamptz;
+ALTER TABLE agents ADD COLUMN IF NOT EXISTS plan jsonb;
+CREATE TABLE IF NOT EXISTS paper_runs (id uuid PRIMARY KEY,agent_id uuid NOT NULL REFERENCES agents(id),owner text NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),price numeric NOT NULL,action text NOT NULL,amount_usd numeric NOT NULL,usd numeric NOT NULL,sol numeric NOT NULL,equity numeric NOT NULL,report jsonb NOT NULL);
+CREATE INDEX IF NOT EXISTS paper_agent_owner ON paper_runs(agent_id,owner,created_at DESC);
+CREATE TABLE IF NOT EXISTS trade_intents (id uuid PRIMARY KEY,agent_id uuid NOT NULL REFERENCES agents(id),owner text NOT NULL,wallet text NOT NULL,request_id text NOT NULL,transaction text NOT NULL,status text NOT NULL DEFAULT 'pending',signature text,created_at timestamptz NOT NULL DEFAULT now(),expires_at timestamptz NOT NULL DEFAULT now()+interval '60 seconds',details jsonb NOT NULL);

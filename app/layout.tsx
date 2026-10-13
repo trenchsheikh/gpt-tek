@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "GPT Tek — Intelligence, on your terms.",
+  title: "Avelis — Build your trading intelligence.",
   description:
-    "Create Solana trading research agents. Publish strategies, rent access by the hour, and earn SOL.",
-  icons: { icon: "/favicon.png", apple: "/favicon.png" },
+    "Build multi-model Solana agents, test your strategy, and rent trading intelligence by the hour.",
+  icons: { icon: "/avelis.svg", apple: "/avelis.svg" },
 };
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

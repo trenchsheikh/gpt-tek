@@ -37,13 +37,23 @@ try {
   const base = "http://localhost:3210";
   const page = await fetch(base);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /Your strategy/);
+  assert.match(await page.text(), /Different minds/);
   const workspace = await fetch(base + "/app");
   assert.equal(workspace.status, 200);
-  assert.match(await workspace.text(), /Find your next edge/);
+  assert.match(await workspace.text(), /build your edge/);
   const errorPage = await fetch(base + "/sign-in?error=Configuration");
   assert.equal(errorPage.status, 200);
-  assert.match(await errorPage.text(), /provider needs to be configured/);
+  assert.match(await errorPage.text(), /Sign-in could not be completed/);
+  const models = await fetch(base + "/api/models");
+  assert.equal(models.status, 200);
+  const catalogue = await models.json();
+  assert.ok(catalogue.length > 100);
+  assert.ok(
+    catalogue.every((m) => m.id && m.name && !m.id.startsWith("openrouter/")),
+  );
+  const market = await fetch(base + "/api/market");
+  assert.equal(market.status, 200);
+  assert.ok((await market.json()).price > 0);
   const favicon = await fetch(base + "/favicon.png");
   assert.equal(favicon.status, 200);
   const status = await fetch(base + "/api/status");
@@ -51,7 +61,15 @@ try {
   const session = await fetch(base + "/api/auth/session");
   assert.equal(session.status, 200);
   assert.equal(await session.json(), null);
-  for (const path of ["/api/agents", "/api/rentals", "/api/mint", "/api/run"]) {
+  for (const path of [
+    "/api/agents",
+    "/api/rentals",
+    "/api/mint",
+    "/api/run",
+    "/api/paper",
+    "/api/decide",
+    "/api/trade",
+  ]) {
     const r = await fetch(base + path, {
       method: "POST",
       headers: { Origin: base, "Content-Type": "application/json" },

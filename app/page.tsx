@@ -2,177 +2,244 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   ArrowRight,
-  Command,
-  Clock,
+  Layers,
+  FlaskConical,
   Wallet,
-  Plus,
+  BrainCircuit,
+  Check,
+  ShieldCheck,
 } from "lucide-react";
-import "./landing.css";
+import ModelStrip from "./model-strip";
 export default function Page() {
   return (
-    <div className="landing">
-      <header className="landing-nav">
-        <Link href="/" className="landing-brand">
-          <img src="/logo.png" alt="GPT Tek logo" />
-          GPT Tek
+    <div className="av-landing">
+      <header className="av-nav">
+        <Link href="/" className="av-brand">
+          <img src="/avelis.svg" alt="Avelis" />
+          avelis<span className="av-beta">BETA</span>
         </Link>
         <nav>
-          <a href="#how-it-works">How it works</a>
-          <a href="#built-for-you">Why GPT Tek</a>
+          <a href="#intelligence">Intelligence</a>
+          <a href="#process">How it works</a>
+          <Link href="/app?view=market">Marketplace</Link>
         </nav>
-        <Link href="/app" className="landing-button">
-          Open app <ArrowUpRight size={15} />
+        <Link className="av-button" href="/app">
+          Launch app <ArrowUpRight size={16} />
         </Link>
       </header>
-      <main className="landing-main">
-        <section className="landing-hero">
-          <div className="landing-kicker">INTELLIGENCE, BUILT ON SOLANA</div>
-          <h1>
-            Your strategy.
-            <br />A new kind of edge.
-          </h1>
-          <p>
-            The decentralized intelligence core for Solana.
-            <br />
-            Build an agent that thinks your way.
-            <br className="mobile-break" /> Share it. Rent it. Earn in SOL.
-          </p>
-          <div className="landing-actions">
-            <Link href="/app?create=1" className="landing-button">
-              Build your agent <Plus size={16} />
-            </Link>
-            <Link href="/app" className="landing-secondary">
-              Explore the network <ArrowRight size={16} />
-            </Link>
-          </div>
-          <div className="landing-caption">
-            Your ideas, connected to opportunity.
-          </div>
-          <div className="landing-preview">
-            <div className="preview-top">
-              <span>
-                <img src="/logo.png" alt="" /> Your intelligence, at work
-              </span>
-              <span className="preview-mode">Research workspace</span>
+      <main className="av-landing-main">
+        <section className="av-hero">
+          <div className="av-hero-copy">
+            <div className="av-eyebrow">
+              <span /> YOUR NEXT EDGE STARTS HERE
             </div>
-            <div className="preview-content">
-              <div className="preview-orbit">
-                <img src="/logo.png" alt="" />
-              </div>
-              <h2>What’s your next move?</h2>
-              <p>A clearer thesis. A sharper strategy. An agent of your own.</p>
-              <div className="preview-pills">
-                <span>↗ Momentum</span>
-                <span>◈ DeFi research</span>
-                <span>◎ Portfolio risk</span>
-              </div>
-              <Link href="/app?create=1" className="preview-composer">
-                <span>Describe the agent you want to build…</span>
-                <span className="preview-arrow">↑</span>
+            <h1>
+              Different minds.
+              <br />
+              One trading
+              <br />
+              <em>intelligence.</em>
+            </h1>
+            <p>
+              Build a Solana agent around your strategy. Choose the models that
+              power it. Test your thinking, then share your edge with the world.
+            </p>
+            <div className="av-actions">
+              <Link href="/app" className="av-button">
+                Build your agent <ArrowUpRight size={17} />
               </Link>
+              <Link href="/app?view=market" className="av-link">
+                Explore agents <ArrowRight size={16} />
+              </Link>
+            </div>
+            <div className="av-hero-note">
+              <ShieldCheck size={14} /> Wallet-controlled execution. Clear
+              limits.
+            </div>
+          </div>
+          <div className="av-orchestration">
+            <div className="av-visual-top">
+              <span>
+                <span className="av-live-dot" /> INTELLIGENCE IN FORMATION
+              </span>
+              <span>01 / 04</span>
+            </div>
+            <div className="av-core">
+              <img src="/avelis.svg" alt="" />
+              <div>
+                <strong>Your strategy</strong>
+                <small>One coordinated agent</small>
+              </div>
+              <Layers size={19} />
+            </div>
+            <div className="av-flow-line" />
+            <div className="av-visual-grid">
+              {[
+                { p: "anthropic", t: "Research", d: "Find the signal." },
+                { p: "openai", t: "Reasoning", d: "Build conviction." },
+                { p: "google", t: "Decision", d: "Pressure-test the move." },
+                {
+                  p: "deepseek",
+                  t: "Execution planning",
+                  d: "Stay inside the limits.",
+                },
+              ].map((s, i) => (
+                <div className={"av-stage s" + i} key={s.t}>
+                  <div>
+                    <img src={`/providers/${s.p}.svg`} alt="" />
+                    <span>0{i + 1}</span>
+                  </div>
+                  <h3>{s.t}</h3>
+                  <p>{s.d}</p>
+                </div>
+              ))}
+            </div>
+            <div className="av-visual-bottom">
+              <span>
+                <Check size={13} /> Model roles are yours to choose
+              </span>
+              <span>Solana ↗</span>
             </div>
           </div>
         </section>
-        <section id="how-it-works" className="landing-section">
-          <div className="landing-section-title">
-            <span className="landing-kicker">A SIMPLE WAY TO START</span>
-            <h2>
-              From an idea
-              <br />
-              to something useful.
-            </h2>
-            <p>One workspace. Three steps. Your own edge.</p>
+        <section id="intelligence" className="av-intelligence">
+          <div className="av-section-line">
+            <span className="av-eyebrow">
+              CHOOSE THE MINDS BEHIND THE MACHINE
+            </span>
+            <span>Live model catalogue</span>
           </div>
-          <div className="landing-steps">
+          <h2>
+            No single model.
+            <br />
+            No single way to think.
+          </h2>
+          <p>
+            Mix leading models across research, reasoning, decisions, and
+            execution planning.
+            <br />
+            Your AI architect helps you choose. You keep the final say.
+          </p>
+          <ModelStrip />
+        </section>
+        <section id="process" className="av-process">
+          <div className="av-section-line">
+            <span className="av-eyebrow">
+              FROM A CONVERSATION TO A MARKETPLACE
+            </span>
+            <span>Built around you</span>
+          </div>
+          <h2>
+            Build it. Test it.
+            <br />
+            Put your edge to work.
+          </h2>
+          <div className="av-process-grid">
             {[
               {
                 n: "01",
-                icon: Command,
-                title: "Make it yours.",
-                text: "Give your agent a strategy, a purpose, and clear rules. Start from a template or your own idea.",
+                icon: BrainCircuit,
+                t: "Talk it into existence.",
+                d: "Describe your goals to your AI architect. Shape the strategy and choose a model for every role.",
               },
               {
                 n: "02",
-                icon: Clock,
-                title: "Share your thinking.",
-                text: "Publish your agent and set an hourly price. Others can rent access when they need your approach.",
+                icon: FlaskConical,
+                t: "Test before you trust.",
+                d: "Run forward paper tests using live market prices. Inspect decisions and a recorded performance history.",
               },
               {
                 n: "03",
-                icon: Wallet,
-                title: "Earn in SOL.",
-                text: "Rental payments go directly to your wallet. Access opens after on-chain confirmation.",
+                icon: Layers,
+                t: "List your intelligence.",
+                d: "Set an hourly SOL price. Publish your tested agent for others to discover and rent.",
               },
-            ].map(({ n, icon: Icon, title, text }) => (
+              {
+                n: "04",
+                icon: Wallet,
+                t: "Rent. Connect. Trade.",
+                d: "Choose your rental time, connect your wallet, and review agent-generated swaps before you approve execution.",
+              },
+            ].map(({ n, icon: Icon, t, d }) => (
               <article key={n}>
                 <div>
                   <Icon size={22} />
                   <span>{n}</span>
                 </div>
-                <h3>{title}</h3>
-                <p>{text}</p>
+                <h3>{t}</h3>
+                <p>{d}</p>
               </article>
             ))}
           </div>
         </section>
-        <section id="built-for-you" className="landing-feature">
+        <section className="av-split">
           <div>
-            <span className="landing-kicker">
-              THINK CLEARER. BUILD TOGETHER.
+            <span className="av-eyebrow">
+              INTELLIGENCE WITHOUT THE BLACK BOX
             </span>
             <h2>
-              Intelligence should
-              <br />
-              feel like yours.
+              Every role has
+              <br />a reason to exist.
             </h2>
             <p>
-              A familiar, quiet workspace for a new kind of network. Create
-              research agents, explore independent strategies, and rent the
-              perspective you need.
+              One model can find evidence. Another can question it. Your
+              decision model weighs the trade, while execution stays governed by
+              your wallet and configured limits.
             </p>
-            <Link href="/app" className="landing-secondary">
-              Find your next edge <ArrowUpRight size={16} />
+            <Link href="/app" className="av-link">
+              Meet your AI architect <ArrowUpRight size={16} />
             </Link>
           </div>
-          <div className="landing-principles">
+          <div className="av-principles">
             <article>
-              <h3>Built around your strategy</h3>
-              <p>
-                Your instructions define the approach. You decide what to
-                publish.
-              </p>
+              <span>01</span>
+              <div>
+                <h3>Your wallet stays yours.</h3>
+                <p>
+                  No seed phrases. No private keys. Live swaps require your
+                  signature.
+                </p>
+              </div>
             </article>
             <article>
-              <h3>Access on your schedule</h3>
-              <p>
-                Rent for the hours you need, with a clear price before you pay.
-              </p>
+              <span>02</span>
+              <div>
+                <h3>Evidence comes first.</h3>
+                <p>
+                  Paper results are recorded from forward tests, with simulation
+                  assumptions shown.
+                </p>
+              </div>
             </article>
             <article>
-              <h3>Your identity. Your AI access.</h3>
-              <p>
-                Connect a Solana wallet. ChatGPT sign-in becomes available when
-                the OpenAI integration is approved.
-              </p>
+              <span>03</span>
+              <div>
+                <h3>Your agent. Your economics.</h3>
+                <p>
+                  You choose the rental price. Payments go directly to your
+                  Solana wallet.
+                </p>
+              </div>
             </article>
           </div>
         </section>
-        <section className="landing-cta">
-          <h2>Bring your next idea.</h2>
-          <p>Build an agent. Put your thinking to work.</p>
-          <Link href="/app?create=1" className="landing-button">
-            Get started <ArrowUpRight size={16} />
+        <section className="av-final-cta">
+          <img src="/avelis.svg" alt="" />
+          <h2>Bring your own edge.</h2>
+          <p>We’ll help you build the intelligence around it.</p>
+          <Link className="av-button" href="/app">
+            Start building <ArrowUpRight size={16} />
           </Link>
         </section>
-        <footer className="landing-footer">
-          <Link href="/" className="landing-brand">
-            <img src="/logo.png" alt="" />
-            GPT Tek
-          </Link>
-          <p>Independent intelligence. Built for Solana.</p>
-          <span>Research agents · Devnet test SOL · No guaranteed returns</span>
-        </footer>
       </main>
+      <footer className="av-footer">
+        <Link href="/" className="av-brand">
+          <img src="/avelis.svg" alt="" />
+          avelis
+        </Link>
+        <span>Independent intelligence. Connected by Solana.</span>
+        <small>AI decisions and paper results do not guarantee returns.</small>
+      </footer>
     </div>
   );
 }

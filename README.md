@@ -1,50 +1,47 @@
-# GPT Tek
+# Avelis
 
-The decentralized intelligence core for Solana. Bring your ChatGPT account, build a trading research agent, publish your strategy, and rent access by the hour for SOL.
+Multi-model Solana trading-agent studio and timed rental marketplace. Public landing page: `/`. App: `/app`. Existing GitHub and Vercel project identifiers remain `gpt-tek` so deployed links stay valid.
 
-A Next.js application with a responsive OpenAI-inspired workspace, the supplied GPT Tek logo and favicon, subtle animation, dark mode, discovery filters, creation templates, creator dashboard, rental history, and an agent research composer. No seeded agents, fabricated performance metrics, or simulated payments.
+## Implemented
 
-The public landing page is at `/`; the compact agent workspace is at `/app`. Sign-in returns to the workspace, with a dedicated recovery page for authentication errors.
+- Live model catalogue with searchable model-selection dialogs, provider logos, capability labels and per-million-token pricing.
+- AI architect conversation using the selected model, with structured strategy proposals and recommendations for research, reasoning, decision and execution-planning roles.
+- Draft editing and browser-local draft persistence. API keys are never persisted in browser storage or the database.
+- Signed Phantom wallet authentication, private drafts, database-backed listings, owner publication controls, and SOL hourly rental payments verified on-chain.
+- Four-model analysis pipeline with live SOL/USD spot data, concise stage rationale, schema-validated decisions and deterministic maximum trade limits.
+- Forward paper tests starting at $10,000 cash, recorded balances and decisions, and explicit 10bps simulated fees. No fabricated historical results. Five owner forward samples are required to publish new multi-model agents. Samples are not proof of profitability.
+- Live SOL/USDC Jupiter Swap V2 order and execute integration. Each swap requires the user to sign in Phantom. Server verifies that the signed message exactly matches the stored quote and that the intended wallet signed it. Orders expire after 60 seconds. Atomic submission claims prevent duplicate execution. Ambiguous network outcomes are marked unknown and must be reconciled against wallet history before another trade.
+- Active rental/owner access is checked again at each AI, paper-test and live-swap request, including before submission.
 
-## Run
+## What is not implemented
 
-Requires Node.js 22 or newer and PostgreSQL.
+Unattended signing/delegated session wallets, automatic background main-wallet trading, on-chain stop orders, project-token rental billing, escrow/refunds, arbitrary-token trading, and historical backtesting. Live trades are wallet-approved and on mainnet; local rental payments default to devnet; the production environment is configured for mainnet. Paper loss limits apply to paper buys, not live stop orders. A strategy can be rented, but a creator's AI credentials are never rented or shared.
+
+## Required service configuration
 
 ```sh
 npm ci
 cp .env.example .env.local
-# Fill DATABASE_URL and AUTH_SECRET in .env.local.
+# Configure AUTH_SECRET and DATABASE_URL.
 node --env-file=.env.local scripts/migrate.mjs
 npm run dev
 ```
 
-Generate AUTH_SECRET with `openssl rand -base64 32`. Use a persistent hosted PostgreSQL database for production. Run the schema migration once before serving requests. On Vercel, add the variables from `.env.example` to the project, run the migration against its database, and deploy this repository using the Next.js preset. Never commit environment files or secrets.
+Production variables:
 
-## Functional flows
+- `AUTH_SECRET`: cryptographically random session secret, server only.
+- `AUTH_URL`: canonical site origin, currently https://gpt-tek.vercel.app.
+- `DATABASE_URL`: dedicated PostgreSQL connection. Run the schema before serving authenticated requests. Do not use another project's database.
+- `OPENROUTER_API_KEY`: server-only OpenRouter credential with available credits. Alternatively each user can enter their own key into the app's Settings; it is held only in page memory and sent when making an AI request. Backend routing uses OpenRouter; the customer interface presents individual models rather than infrastructure branding.
+- `JUPITER_API_KEY`: server-only key provisioned through https://portal.jup.ag for Swap V2.
+- `MAINNET_RPC_URL`: mainnet Solana RPC for live-wallet balances. Use a suitable production RPC provider.
+- `SOLANA_RPC_URL` and `NEXT_PUBLIC_SOLANA_RPC_URL`: same cluster for rental/mint payments. Local default is devnet. Production currently uses mainnet RPC and `NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta`.
 
-- **Wallet identity:** Phantom signs a domain-bound nonce; Ed25519 verification creates an Auth.js session. Challenges are stored in PostgreSQL, expire after five minutes, and are consumed once.
-- **ChatGPT identity:** Auth.js OpenID Connect with PKCE, state and nonce checks, discovery and ID token verification. Set `OPENAI_CLIENT_ID` and, for confidential clients, `OPENAI_CLIENT_SECRET`. For the current deployment, register the exact callback `https://gpt-tek.vercel.app/api/auth/callback/openai`. The production AUTH_URL is set to the same canonical origin. Confidential clients use `client_secret_basic` as documented by OpenAI; public clients use `none`. The button remains visibly unavailable without a registered client.
-- **Agent creation:** authenticated owners save private strategy instructions and a payout wallet. Listings can be published or unlisted. Public marketplace responses omit private strategy instructions.
-- **Mint:** after creation, owners can approve a 1/1 SPL token mint in Phantom. The transaction creates the mint, initializes its associated token account, issues one token, revokes the mint authority, and writes the agent ID and SHA-256 strategy hash in a Solana memo. Verification checks the mint supply, decimals, revoked authorities, recipient account, creator signature and memo. These are token receipts, not Metaplex artwork NFTs. Database ownership does not transfer when the receipt token transfers.
-- **Rent:** select 1–168 hours and approve a direct transfer to the creator. The server verifies exact lamports, sender, recipient, rental-specific memo, signer, confirmation status and transaction age. A unique database constraint prevents reusing a signature. Access begins after verification and expires according to the server clock.
-- **Recovery:** if a mint or payment succeeds but verification fails, copy its signature from Phantom and use Verify mint / Verify payment. Do not send a second payment. Checkout expires after ten minutes; contact the operator if a valid payment needs manual reconciliation after that window. There is no escrow or automatic refund system in this version.
-- **Inference:** owners and active renters can run agent research through the Responses API. Use your own OpenAI API key in Settings, or configure `OPENAI_API_KEY` on the server. User-supplied keys stay only in page memory and are forwarded for requests, never persisted. Requests have bounded input/output, a timeout and a shared database-backed per-user usage limit. Configure provider budgets when using a shared server key.
+No account credentials or API keys can be manufactured by the source code. New provider accounts, paid credits and database provisioning require owner setup/approval. Public model names and Coinbase spot prices can load without these paid/private credentials.
 
-## OpenAI availability
+When migrating to Supabase, use a dedicated project and keep these tables server-only. Enable RLS and revoke anon/authenticated access; the app uses its server PostgreSQL connection and Auth.js authorization, not Supabase client authentication.
 
-Official reference: https://developers.openai.com/siwc
-
-Commercial website Sign in with ChatGPT is offered to selected partners. A registered client is required; identity sign-in alone does not grant Responses API access. Hosted commercial ChatGPT plan usage requires separate approval. The OSS/local registration flow is not used as a workaround for a hosted marketplace.
-
-This app implements identity integration and API-key-backed inference. ChatGPT subscription inference is **not** enabled until approved and integrated under the correct hosted access contract. Creators publish strategy access, never their ChatGPT credentials or subscription tokens. GPT Tek is independent and is not affiliated with OpenAI.
-
-## Solana network
-
-Defaults to **devnet / test SOL**. Keep `SOLANA_RPC_URL`, `NEXT_PUBLIC_SOLANA_RPC_URL` and `NEXT_PUBLIC_SOLANA_NETWORK` aligned. For mainnet use a suitable authenticated RPC service and set the public network label to `mainnet-beta`; do not expose a private RPC credential in the public URL. Minting incurs Solana account rent and network fees paid by the creator. Rentals add wallet network fees to the quoted SOL rental price.
-
-No custodial keys are stored. Every mint and rental transfer requires wallet approval. This is a centralized strategy marketplace with on-chain payment and token receipts, not a fully decentralized protocol. Autonomous trading, continuous scheduled execution, Jupiter swaps, escrow, token-gated ownership transfers and live market-feed tools are not implemented. The research composer explicitly prevents claims of fabricated prices or executed trades.
-
-## Checks
+## Verification
 
 ```sh
 npm run test
@@ -53,6 +50,11 @@ npm run build
 node scripts/smoke.mjs
 ```
 
-Tests cover request validation, arithmetic limits, payment spoofing, failed/stale transactions, idempotent PostgreSQL schema setup, payment replay constraints, owner restrictions and rental expiry. The smoke check starts the production server and checks server rendering, favicon, status, session, authenticated endpoint protection and cross-origin rejection.
+Tests cover payment spoofing/replay, rental expiry, owner access, mint instruction encoding, patched RPC transport, risk bounds and paper accounting. The smoke test checks both routes, provider-free public catalogue, live market data, session and private endpoint rejection. Real model completions, funded rentals and real swaps require configured credentials and user wallet approval; they have not been financially transacted by the coding agent.
 
-Real Phantom approval, an approved OpenAI OAuth client, hosted database operations, AI responses and devnet transaction confirmation require configured external services and are not validated by the offline tests.
+## Sources and assets
+
+- Models/completions: https://openrouter.ai/docs
+- Swap order/execute: https://developers.jup.ag/docs/swap/order-and-execute
+- Spot market data: Coinbase SOL/USD spot API; this reference price is not an executable Jupiter quote.
+- Provider icons: `@lobehub/icons-static-svg`, MIT-licensed icon package. Provider marks belong to their respective owners; inclusion does not imply partnership. Avelis logo is an original SVG asset.

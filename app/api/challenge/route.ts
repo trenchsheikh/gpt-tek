@@ -11,7 +11,7 @@ export async function POST(r: Request) {
       300,
     );
     const id = randomUUID();
-    const message = `GPT Tek wallet sign-in\nDomain: ${new URL(r.url).host}\nNonce: ${id}\nIssued: ${new Date().toISOString()}\nThis signature authenticates you. It does not authorize a transaction.`;
+    const message = `Avelis wallet sign-in\nDomain: ${new URL(r.url).host}\nNonce: ${id}\nIssued: ${new Date().toISOString()}\nThis signature authenticates you. It does not authorize a transaction.`;
     await db().query("DELETE FROM challenges WHERE expires_at<now()");
     await db().query(
       "INSERT INTO challenges VALUES($1,$2,now()+interval '5 minutes')",
