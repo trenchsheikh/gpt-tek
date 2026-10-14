@@ -1,3 +1,4 @@
+import { appUrl, docsUrl, websiteUrl, docsLink } from "@/lib/site-urls";
 import { SiteControls, XLink } from "./site-controls";
 import PoweredBy from "./powered-by";
 import Link from "next/link";
@@ -17,18 +18,18 @@ export default function Page() {
   return (
     <div className="av-landing">
       <header className="av-nav">
-        <Link href="/" className="av-brand">
+        <Link href={websiteUrl} className="av-brand">
           <img src="/avelis-logo.png" alt="AgentRouter" />
           AgentRouter
         </Link>
         <nav>
           <a href="#intelligence">Intelligence</a>
           <a href="#process">How it works</a>
-          <Link href="/docs">Docs</Link>
-          <Link href="/app">Marketplace</Link>
+          <Link href={docsUrl}>Docs</Link>
+          <Link href={appUrl}>Marketplace</Link>
         </nav>
         <SiteControls />
-        <Link className="av-button" href="/app">
+        <Link className="av-button" href={appUrl}>
           Launch app <ArrowUpRight size={16} />
         </Link>
       </header>
@@ -48,10 +49,10 @@ export default function Page() {
               your agent.
             </p>
             <div className="av-actions">
-              <Link href="/app" className="av-button">
+              <Link href={appUrl} className="av-button">
                 Build your agent <ArrowUpRight size={17} />
               </Link>
-              <Link href="/app" className="av-link">
+              <Link href={appUrl} className="av-link">
                 Explore agents <ArrowRight size={16} />
               </Link>
             </div>
@@ -166,7 +167,7 @@ export default function Page() {
               </article>
             ))}
           </div>
-          <Link href="/app" className="av-button">
+          <Link href={appUrl} className="av-button">
             Build a stock-token agent <ArrowUpRight size={16} />
           </Link>
         </section>
@@ -233,7 +234,7 @@ export default function Page() {
               then rent access for the hours you need. Keep your trading funds
               in your own wallet.
             </p>
-            <Link href="/app" className="av-button">
+            <Link href={appUrl} className="av-button">
               Explore the marketplace <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -330,7 +331,7 @@ export default function Page() {
               decision model weighs the trade, while execution stays governed by
               your wallet and configured limits.
             </p>
-            <Link href="/app" className="av-link">
+            <Link href={appUrl} className="av-link">
               Meet your AI architect <ArrowUpRight size={16} />
             </Link>
           </div>
@@ -371,17 +372,17 @@ export default function Page() {
           <img src="/avelis-logo.png" alt="" />
           <h2>Bring your own edge.</h2>
           <p>We’ll help you build the intelligence around it.</p>
-          <Link className="av-button" href="/app">
+          <Link className="av-button" href={appUrl}>
             Start building <ArrowUpRight size={16} />
           </Link>
         </section>
       </main>
       <footer className="av-footer">
-        <Link href="/" className="av-brand">
+        <Link href={websiteUrl} className="av-brand">
           <img src="/avelis-logo.png" alt="" />
           AgentRouter
         </Link>
-        <Link href="/docs">Documentation</Link>
+        <Link href={docsUrl}>Documentation</Link>
         <XLink />
         <span>Independent intelligence. Connected by Solana.</span>
         <small>AI decisions and paper results do not guarantee returns.</small>

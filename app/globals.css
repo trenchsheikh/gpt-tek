@@ -5541,7 +5541,7 @@ html[data-theme="dark"] {
   height: 40px;
   object-fit: contain;
   image-rendering: pixelated;
-  animation: ar-walk 1.1s linear infinite;
+  animation: ar-walk 2.6s linear infinite;
 }
 @keyframes ar-walk {
   0% {

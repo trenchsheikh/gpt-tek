@@ -1,4 +1,5 @@
 "use client";
+import { appUrl, docsUrl, websiteUrl, docsLink } from "@/lib/site-urls";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -45,13 +46,12 @@ export default function DocsReader({
   );
   const index = pages.findIndex((item) => item.slug === page.slug);
   const groups = Array.from(new Set(pages.map((item) => item.group)));
-  const href = (slug: string) =>
-    slug === "overview" ? "/docs" : "/docs/" + slug;
+  const href = (slug: string) => docsLink(slug);
 
   return (
     <div className={styles.shell}>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand}>
+        <Link href={websiteUrl} className={styles.brand}>
           <img src="/avelis-logo.png" alt="" />
           <span>
             AgentRouter <small>Docs</small>
@@ -68,8 +68,8 @@ export default function DocsReader({
         </label>
         <div className={styles.headerLinks}>
           <SiteControls />
-          <Link href="/">Website</Link>
-          <Link href="/app" className={styles.launch}>
+          <Link href={websiteUrl}>Website</Link>
+          <Link href={appUrl} className={styles.launch}>
             Open app <ArrowUpRight size={14} />
           </Link>
         </div>
@@ -151,13 +151,13 @@ export default function DocsReader({
           <p className={styles.description}>{page.description}</p>
           {page.slug === "overview" && (
             <div className={styles.startLinks}>
-              <Link href="/docs/quickstart">
+              <Link href={docsLink("quickstart")}>
                 <strong>Build your first agent</strong>
                 <span>
                   Follow the guided setup <ArrowRight size={15} />
                 </span>
               </Link>
-              <Link href="/docs/architecture">
+              <Link href={docsLink("architecture")}>
                 <strong>Understand the system</strong>
                 <span>
                   Explore the technical architecture <ArrowRight size={15} />
@@ -289,7 +289,7 @@ export default function DocsReader({
               </a>
             ))}
           </nav>
-          <Link href="/app">
+          <Link href={appUrl}>
             Start building <ArrowUpRight size={14} />
           </Link>
         </aside>

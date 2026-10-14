@@ -63,7 +63,7 @@ export function AppArrival() {
     window.dispatchEvent(new Event("agentrouter-theme"));
     const timer = setTimeout(
       () => setVisible(false),
-      matchMedia("(prefers-reduced-motion: reduce)").matches ? 100 : 1100,
+      matchMedia("(prefers-reduced-motion: reduce)").matches ? 100 : 2600,
     );
     return () => clearTimeout(timer);
   }, []);

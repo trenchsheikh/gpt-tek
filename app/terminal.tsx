@@ -1,4 +1,5 @@
 "use client";
+import { appUrl, docsUrl, websiteUrl, docsLink } from "@/lib/site-urls";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getSession, signIn, signOut } from "next-auth/react";
@@ -509,7 +510,7 @@ export default function Terminal() {
     <div className="at-shell">
       <AppArrival />
       <header className="ar-app-nav">
-        <Link href="/" className="av-brand">
+        <Link href={websiteUrl} className="av-brand">
           <img src="/avelis-logo.png" alt="" />
           AgentRouter
         </Link>
@@ -533,7 +534,7 @@ export default function Terminal() {
         </nav>
         <div className="ar-nav-account">
           <SiteControls />
-          <Link href="/docs" className="at-outline">
+          <Link href={docsUrl} className="at-outline">
             Docs
           </Link>
           <button
@@ -2047,7 +2048,7 @@ export default function Terminal() {
         )}
       </div>
       <footer className="ar-app-footer">
-        <Link href="/docs">Docs</Link>
+        <Link href={docsUrl}>Docs</Link>
         <XLink />
         <span>AgentRouter</span>
       </footer>
