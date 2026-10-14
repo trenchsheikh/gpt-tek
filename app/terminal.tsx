@@ -10,6 +10,8 @@ import SimulationTest from "./simulation-test";
 import { SiteControls, XLink, AppArrival } from "./site-controls";
 import PoweredBy from "./powered-by";
 import IntegrationPicker from "./integration-picker";
+import { featuredTemplates } from "@/lib/featured-templates";
+import { platformsForMarket, integrationInfo } from "@/lib/integrations";
 import { supportsSwaps } from "@/lib/integrations";
 import AgentAvatar, { avatarNames } from "./agent-avatar";
 import {
@@ -38,6 +40,9 @@ import { planSchema, stages } from "@/lib/agent-plan";
 import type { z } from "zod";
 type Plan = z.infer<typeof planSchema>;
 type Agent = {
+  builtin?: boolean;
+  creator?: string;
+  riskLevel?: string;
   id: string;
   name: string;
   description: string;
@@ -307,11 +312,13 @@ export default function Terminal() {
           : "/api/agents" + (v === "My agents" ? "?mine=1" : ""),
       );
       if (id !== serial.current) return;
-      v === "Rentals" ? setRentals(d) : setAgents(d);
+      v === "Rentals"
+        ? setRentals(d)
+        : setAgents(v === "Marketplace" ? [...featuredTemplates, ...d] : d);
     } catch (e) {
       if (id === serial.current) {
-        setError((e as Error).message);
-        setAgents([]);
+        setError(v === "Marketplace" ? "" : (e as Error).message);
+        setAgents(v === "Marketplace" ? featuredTemplates : []);
         setRentals([]);
       }
     } finally {
@@ -943,6 +950,7 @@ export default function Terminal() {
                           "Trenches",
                           "Prediction markets",
                           "Stock Tokens",
+                          "Arbitrage",
                         ].map((c) => (
                           <option key={c}>{c}</option>
                         ))}
@@ -1098,6 +1106,7 @@ export default function Terminal() {
                   "Trenches",
                   "Prediction markets",
                   "Stock Tokens",
+                  "Arbitrage",
                 ].map((c) => (
                   <button
                     key={c}
@@ -1208,6 +1217,11 @@ export default function Terminal() {
                         <span className="at-pill">{a.category}</span>
                       </div>
                       <h3>{a.name}</h3>
+                      {a.builtin && (
+                        <small className="at-footnote">
+                          By AgentRouter · {a.riskLevel} · Free to use
+                        </small>
+                      )}
                       <p>{a.description}</p>
                       <div className="at-card-models">
                         {Array.from(
@@ -1225,7 +1239,9 @@ export default function Terminal() {
                         aria-label={`${a.paper_samples || 0} forward tests recorded`}
                       >
                         <div>
-                          <span>Forward tests</span>
+                          <span>
+                            {a.builtin ? "Starting template" : "Forward tests"}
+                          </span>
                           <strong>{a.paper_samples || 0}</strong>
                         </div>
                         <progress
@@ -1236,14 +1252,19 @@ export default function Terminal() {
                       <div className="at-card-stats">
                         <span>
                           {view === "Marketplace"
-                            ? `${a.paper_samples || 0} forward samples`
+                            ? a.builtin
+                              ? `${a.riskLevel} risk`
+                              : `${a.paper_samples || 0} forward samples`
                             : a.listed
                               ? "Listed on marketplace"
                               : "Private draft"}
                         </span>
                         <span>
-                          <strong>{Number(a.hourly_agent || 0)} $AGENT</strong>{" "}
-                          / hr
+                          <strong>
+                            {a.builtin
+                              ? "Free"
+                              : `${Number(a.hourly_agent || 0)} $AGENT / hr`}
+                          </strong>
                         </span>
                       </div>
                       <button
@@ -1319,11 +1340,53 @@ export default function Terminal() {
                 <p>{selected.description}</p>
               </div>
               <div className="ar-detail-price">
-                <strong>{Number(selected.hourly_agent || 0)} $AGENT</strong>
-                <span>per hour</span>
-                <button className="av-button" onClick={() => setModal("rent")}>
-                  Rent this agent <ArrowUpRight size={16} />
-                </button>
+                <strong>
+                  {selected.builtin
+                    ? "Free to use"
+                    : `${Number(selected.hourly_agent || 0)} $AGENT`}
+                </strong>
+                <span>
+                  {selected.builtin
+                    ? `By AgentRouter · ${selected.riskLevel}`
+                    : "per hour"}
+                </span>
+                {selected.builtin ? (
+                  <button
+                    className="av-button"
+                    disabled={busy}
+                    onClick={() => {
+                      if (!session?.user) {
+                        setModal("login");
+                        return;
+                      }
+                      action(async () => {
+                        const address = wallet || (await connect());
+                        await api("/api/agents", {
+                          ...selected.plan,
+                          plan: selected.plan,
+                          wallet: address,
+                          listed: false,
+                          hourlyAgent: 10,
+                          avatar: selected.avatar,
+                          avatarColor: selected.avatar_color,
+                        });
+                        setView("My agents");
+                        setNotice(
+                          "Free template saved to My agents. Customise and test your copy.",
+                        );
+                      });
+                    }}
+                  >
+                    Use this agent <ArrowUpRight size={16} />
+                  </button>
+                ) : (
+                  <button
+                    className="av-button"
+                    onClick={() => setModal("rent")}
+                  >
+                    Rent this agent <ArrowUpRight size={16} />
+                  </button>
+                )}
               </div>
             </div>
             <div className="ar-detail-grid">
@@ -1354,10 +1417,13 @@ export default function Terminal() {
                 ))}
               </section>
               <section className="at-panel">
-                <h2>Rental details</h2>
+                <h2>
+                  {selected.builtin ? "Strategy & risk" : "Rental details"}
+                </h2>
                 <p>
-                  1–168 hours of access. Payment goes directly to the creator.
-                  Trading funds remain in your wallet.
+                  {selected.builtin
+                    ? selected.plan?.strategy
+                    : "1–168 hours of access. Payment goes directly to the creator. Trading funds remain in your wallet."}
                 </p>
                 <div className="ar-card-risk">
                   <span>
@@ -1390,53 +1456,59 @@ export default function Terminal() {
                 </small>
               </section>
             </div>
+            {selected.builtin && (
+              <section className="at-panel">
+                <h2>Test this strategy</h2>
+                <p className="at-footnote">
+                  Run a synthetic scenario. No funds are spent or orders placed.
+                  Sign in to test.
+                </p>
+                <SimulationTest plan={selected.plan} />
+              </section>
+            )}
             <section className="at-panel">
-              <h2>Your trading platforms</h2>
+              <h2>
+                One click integration <span className="at-pill">Live</span>
+              </h2>
               <p className="at-footnote">
-                Open a platform below. Direct agent connections require a
-                supported integration and are not enabled yet.
+                Terminal links are live. One click opens your chosen platform;
+                it does not connect your account or execute orders.
               </p>
               <div className="ar-detail-terminals">
-                {[
-                  {
-                    name: "Axiom",
-                    url: "https://axiom.trade",
-                    logo: "axiom.svg",
-                  },
-                  { name: "GMGN", url: "https://gmgn.ai", logo: "gmgn.ico" },
-                  {
-                    name: "Pump Terminal",
-                    url: "https://trade.padre.gg",
-                    logo: "pump.svg",
-                  },
-                  {
-                    name: "Fomo",
-                    url: "https://fomo.family",
-                    logo: "fomo.svg",
-                  },
-                  {
-                    name: "Polymarket",
-                    url: "https://polymarket.com",
-                    logo: "polymarket.svg",
-                  },
-                  {
-                    name: "Kalshi",
-                    url: "https://kalshi.com",
-                    logo: "kalshi.png",
-                  },
-                ].map((t) => (
-                  <a
-                    key={t.name}
-                    href={t.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="at-outline"
-                  >
-                    <img src={`/terminals/${t.logo}`} alt="" />
-                    {t.name}
-                    <ArrowUpRight size={14} />
-                  </a>
-                ))}
+                {platformsForMarket(
+                  selected.plan?.market ||
+                    (selected.category === "Trenches"
+                      ? "Memecoin trading"
+                      : selected.category === "Prediction markets"
+                        ? "Prediction markets"
+                        : "Spot trading"),
+                ).map((name) => {
+                  const info = integrationInfo(name);
+                  const logo = (
+                    {
+                      Axiom: "axiom.svg",
+                      GMGN: "gmgn.ico",
+                      "Pump.fun": "pump.svg",
+                      Fomo: "fomo.svg",
+                      Polymarket: "polymarket.svg",
+                      Kalshi: "kalshi.png",
+                      "Solana swaps": "solana.png",
+                    } as Record<string, string>
+                  )[name];
+                  return (
+                    <a
+                      key={name}
+                      href={info.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="at-outline"
+                    >
+                      {logo && <img src={`/terminals/${logo}`} alt="" />}
+                      {name}
+                      <ArrowUpRight size={14} />
+                    </a>
+                  );
+                })}
               </div>
             </section>
           </main>
