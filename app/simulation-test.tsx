@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { X, FlaskConical, LoaderCircle } from "lucide-react";
+import { X, FlaskConical } from "lucide-react";
+import SimulationOffice from "./simulation-office";
 import type { SimulationResult } from "@/lib/simulation";
 
 export default function SimulationTest({
@@ -15,6 +16,7 @@ export default function SimulationTest({
   const [error, setError] = useState("");
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [progress, setProgress] = useState(0);
+  const [variant, setVariant] = useState(0);
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const abort = useRef<AbortController | null>(null);
@@ -49,26 +51,12 @@ export default function SimulationTest({
     document.addEventListener("keydown", key);
     return () => document.removeEventListener("keydown", key);
   }, [open]);
-  useEffect(() => {
-    if (!result) return;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setProgress(1);
-      return;
-    }
-    let frame: number;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const value = Math.min(1, (now - start) / 6500);
-      setProgress(value);
-      if (value < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [result]);
   async function run() {
     abort.current?.abort();
     const controller = new AbortController();
     abort.current = controller;
+    const started = Date.now();
+    setVariant(crypto.getRandomValues(new Uint32Array(1))[0] % 10000);
     setOpen(true);
     setBusy(true);
     setError("");
@@ -84,7 +72,27 @@ export default function SimulationTest({
       const data = await response.json();
       if (!response.ok)
         throw new Error(data.error || "Could not run simulation.");
-      if (!controller.signal.aborted) setResult(data);
+      // The office runs for at least ten seconds; slow calculations keep it alive.
+      await new Promise<void>((resolve, reject) => {
+        const finish = () => {
+          controller.signal.removeEventListener("abort", cancel);
+          resolve();
+        };
+        const cancel = () => {
+          clearTimeout(timer);
+          reject(new DOMException("Cancelled", "AbortError"));
+        };
+        const timer = setTimeout(
+          finish,
+          Math.max(0, 10000 - (Date.now() - started)),
+        );
+        controller.signal.addEventListener("abort", cancel, { once: true });
+        if (controller.signal.aborted) cancel();
+      });
+      if (!controller.signal.aborted) {
+        setProgress(1);
+        setResult(data);
+      }
     } catch (e) {
       if (!controller.signal.aborted) setError((e as Error).message);
     } finally {
@@ -139,15 +147,7 @@ export default function SimulationTest({
               A generated scenario, not historical performance. No real funds or
               trades.
             </p>
-            {busy && (
-              <div className="ar-sim-loading" role="status">
-                <img src="/avelis-logo.png" alt="" />
-                <LoaderCircle className="ar-spin" size={18} />
-                <span>
-                  Interpreting your strategy and generating a market scenario…
-                </span>
-              </div>
-            )}
+            {busy && <SimulationOffice key={variant} variant={variant} />}
             {error && (
               <div className="ar-chat-notice" role="alert">
                 {error}
