@@ -10,6 +10,19 @@ export const integrationNames = [
   "Kalshi",
 ] as const;
 export type Integration = (typeof integrationNames)[number];
+
+export function platformsForMarket(market?: string): readonly Integration[] {
+  if (market === "Memecoin trading")
+    return ["Axiom", "Fomo", "GMGN", "Pump.fun"];
+  if (market === "Prediction markets") return ["Polymarket", "Kalshi"];
+  if (market === "Perp trading") return ["Hyperliquid"];
+  if (market === "Spot trading" || market === "Portfolio management")
+    return ["Solana swaps", "GMGN"];
+  if (market === "DeFi and yield" || market === "Arbitrage")
+    return ["Solana swaps", "DEX Screener"];
+  return ["DEX Screener", "Hyperliquid", "Polymarket"];
+}
+
 export function defaultIntegration(market?: string): Integration {
   return market === "Perp trading"
     ? "Hyperliquid"

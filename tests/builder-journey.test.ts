@@ -41,3 +41,39 @@ test("market-specific research and execution choices reflect available integrati
   );
   assert.ok(nextChoices(0).includes("Prediction markets"));
 });
+
+test("platform is chosen by the user and overrides model guesses", () => {
+  const draft = {
+    strategy: "Research token liquidity before entries.",
+    integration: "Polymarket" as const,
+    maxTradeUsd: 100,
+    stopLossPct: 7,
+    slippageBps: 50,
+  };
+  const before = applyPreferences(draft, { market: "Memecoin trading" });
+  assert.equal(before.integration, undefined);
+  assert.deepEqual(nextChoices(4, { market: "Memecoin trading" }), [
+    "Axiom",
+    "Fomo",
+    "GMGN",
+    "Pump.fun",
+    "Research only",
+  ]);
+  assert.deepEqual(nextChoices(4, { market: "Prediction markets" }), [
+    "Polymarket",
+    "Kalshi",
+    "Research only",
+  ]);
+  assert.equal(
+    applyPreferences(draft, { market: "Memecoin trading", execution: "GMGN" })
+      .integration,
+    "GMGN",
+  );
+  assert.equal(
+    applyPreferences(draft, {
+      market: "Memecoin trading",
+      execution: "Polymarket",
+    }).integration,
+    undefined,
+  );
+});

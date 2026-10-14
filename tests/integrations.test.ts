@@ -34,6 +34,15 @@ test("market selections choose research feeds and never silently enable unsuppor
   );
   assert.equal(
     (p as typeof p & { integration: string }).integration,
+    undefined,
+  );
+  assert.equal(
+    (
+      applyPreferences(p, {
+        market: "Perp trading",
+        execution: "Hyperliquid",
+      }) as typeof p & { integration: string }
+    ).integration,
     "Hyperliquid",
   );
 });

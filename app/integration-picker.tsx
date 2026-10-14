@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   integrationNames,
   integrationInfo,
-  defaultIntegration,
+  platformsForMarket,
   type Integration,
 } from "@/lib/integrations";
 export default function IntegrationPicker({
@@ -19,8 +19,9 @@ export default function IntegrationPicker({
   onChange: (integration: Integration, target: string) => void;
   disabled?: boolean;
 }) {
-  const name = integration || defaultIntegration(market);
-  const info = integrationInfo(name);
+  const name = integration;
+  const info = name ? integrationInfo(name) : null;
+  const choices = platformsForMarket(market);
   const query = target || (name === "Polymarket" ? "esports" : "SOL");
   const [state, setState] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ export default function IntegrationPicker({
       <label>
         Platform / data feed
         <select
-          value={name}
+          value={name || ""}
           disabled={disabled || loading}
           onChange={(e) => {
             setState("");
@@ -59,7 +60,13 @@ export default function IntegrationPicker({
             );
           }}
         >
-          {integrationNames.map((n) => (
+          <option value="" disabled>
+            Choose your platform
+          </option>
+          {(integration && !choices.includes(integration)
+            ? [integration, ...choices]
+            : choices
+          ).map((n) => (
             <option key={n}>{n}</option>
           ))}
         </select>
@@ -73,39 +80,43 @@ export default function IntegrationPicker({
         <input
           value={query}
           maxLength={80}
-          disabled={disabled || loading}
+          disabled={disabled || loading || !name}
           onChange={(e) => {
             setState("");
-            onChange(name, e.target.value);
+            if (name) onChange(name, e.target.value);
           }}
         />
       </label>
       <div className="ar-integration-status">
         <span className="ar-status-dot" />
-        {info.mode}
+        {info?.mode || "Choose a platform to see connection capabilities"}
       </div>
       <p>
-        {info.data
+        {info?.data
           ? `Evidence source: ${info.data}. Public research access does not connect your trading account.`
-          : "Select Polymarket for live prediction research. This destination currently opens its terminal."}
+          : name
+            ? "This destination opens its terminal. Direct order execution needs an authorized platform adapter."
+            : "You choose the destination; the builder does not pick it for you."}
       </p>
       <div className="at-actions">
         <button
           type="button"
           className="at-outline"
           onClick={check}
-          disabled={disabled || loading || !info.data || !query.trim()}
+          disabled={disabled || loading || !info?.data || !query.trim()}
         >
           {loading ? "Checking feed…" : "Check live feed"}
         </button>
-        <a
-          className="at-outline"
-          href={info.url}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Open terminal ↗
-        </a>
+        {info && (
+          <a
+            className="at-outline"
+            href={info.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open terminal ↗
+          </a>
+        )}
       </div>
       {state && <small role="status">{state}</small>}
     </div>

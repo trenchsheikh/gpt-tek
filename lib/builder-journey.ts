@@ -1,4 +1,4 @@
-import { defaultIntegration } from "./integrations";
+import { platformsForMarket } from "./integrations";
 export const markets = [
   "Memecoin trading",
   "Perp trading",
@@ -13,17 +13,17 @@ export const marketNotes: Record<string, string> = {
   "Memecoin trading":
     "Liquidity, holders and rug-risk checks before chasing momentum. Token execution needs a supported integration.",
   "Perp trading":
-    "Funding, open interest, liquidation distance and leverage limits come first. Perp execution isn’t connected yet.",
+    "Funding, open interest, liquidation distance and leverage limits come first. Choose your perp platform and review its connection capabilities.",
   "Spot trading":
     "Trend, liquidity and entry/exit rules. Live wallet-approved execution currently supports SOL/USDC only.",
   "Prediction markets":
-    "Event evidence, resolution rules and implied odds. Market execution isn’t connected yet.",
+    "Event evidence, resolution rules and implied odds. Choose your prediction platform and review its connection capabilities.",
   "DeFi and yield":
-    "Protocol risk, yield sustainability and exit liquidity. Protocol execution isn’t connected yet.",
+    "Protocol risk, yield sustainability and exit liquidity. Choose the intended venue and verify its protocol capabilities.",
   Arbitrage:
-    "Check the spread after fees, slippage and latency. Multi-venue execution isn’t connected yet.",
+    "Check the spread after fees, slippage and latency. Choose the venues and verify authorized execution capabilities.",
   "Portfolio management":
-    "Exposure, concentration and rebalancing rules. Portfolio-wide execution isn’t connected yet.",
+    "Exposure, concentration and rebalancing rules. Choose the intended platform and verify supported assets.",
   "Market research":
     "Cross-check sources and flag missing evidence. This is a research blueprint, not live execution.",
 };
@@ -91,12 +91,12 @@ export function inferMarket(text: string) {
 }
 export function stageFor(step: number, preferences: Preferences = {}) {
   const stage = journey[preferences.market ? step + 1 : 0];
-  if (stage?.key === "execution" && preferences.market !== "Spot trading")
+  if (stage?.key === "execution")
     return {
       ...stage,
       question:
-        "Execution for this market isn’t connected yet. Start with research or map the paper-test workflow?",
-      options: ["Research only", "Plan a paper-test workflow"],
+        "Which platform should this agent use? Pick your destination. We’ll save it in the blueprint and show its research, handoff and execution capabilities before you run.",
+      options: [...platformsForMarket(preferences.market), "Research only"],
     };
   if (!stage || stage.key !== "research") return stage;
   const options: Record<string, readonly string[]> = {
@@ -165,8 +165,11 @@ export function applyPreferences<
     ...(preferences.market
       ? {
           market: preferences.market,
-          integration:
-            plan.integration || defaultIntegration(preferences.market),
+          integration: platformsForMarket(preferences.market).includes(
+            preferences.execution as import("./integrations").Integration,
+          )
+            ? (preferences.execution as import("./integrations").Integration)
+            : undefined,
         }
       : {}),
     maxTradeUsd: max || plan.maxTradeUsd,
