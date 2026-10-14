@@ -5793,3 +5793,27 @@ html[data-theme="dark"] :is(.ar-chat-notice, .at-notice) {
   color: var(--ar-muted);
   margin-top: 8px;
 }
+.ar-result-narrative {
+  font-size: 12px;
+  line-height: 1.85;
+  color: var(--ar-muted);
+  margin: 14px 0 18px;
+}
+.ar-result-stage {
+  animation: ar-result-in 0.35s ease-out both;
+}
+@keyframes ar-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ar-result-stage {
+    animation: none;
+  }
+}

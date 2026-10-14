@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X, FlaskConical } from "lucide-react";
 import SimulationOffice from "./simulation-office";
+import { ChatText } from "./chat-text";
 import type { SimulationResult } from "@/lib/simulation";
 
 export default function SimulationTest({
@@ -17,10 +18,26 @@ export default function SimulationTest({
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [progress, setProgress] = useState(0);
   const [variant, setVariant] = useState(0);
+  const [reveal, setReveal] = useState(0);
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
   const abort = useRef<AbortController | null>(null);
   useEffect(() => () => abort.current?.abort(), []);
+  useEffect(() => {
+    if (!result) {
+      setReveal(0);
+      return;
+    }
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setReveal(4);
+      return;
+    }
+    setReveal(0);
+    const timers = [1800, 3600, 5800, 8000].map((delay, index) =>
+      setTimeout(() => setReveal(index + 1), delay),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, [result]);
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
@@ -175,51 +192,71 @@ export default function SimulationTest({
                   <strong>{Math.round(progress * 100)}%</strong>
                   <progress value={progress} max={1} />
                 </div>
-                <div className="ar-sim-metrics">
-                  <div>
-                    <small>Starting capital</small>
-                    <strong>$100.00</strong>
-                  </div>
-                  <div>
-                    <small>Ending equity</small>
-                    <strong>${(equity || 100).toFixed(2)}</strong>
-                  </div>
-                  <div>
-                    <small>Net return</small>
-                    <strong
-                      className={(equity || 100) >= 100 ? "ar-gain" : "ar-loss"}
-                    >
-                      {((equity || 100) - 100).toFixed(2)}%
-                    </strong>
-                  </div>
-                  <div>
-                    <small>Closed trades</small>
-                    <strong>{point?.trades || 0}</strong>
+                <p className="ar-result-narrative">
+                  <ChatText
+                    animate
+                    text={`Your $100 starting balance finished at $${result.endingEquity.toFixed(2)} after ${result.tradeCount} closed trades. Net ${result.profit >= 0 ? "profit" : "loss"} was $${Math.abs(result.profit).toFixed(2)}, a ${Math.abs(result.returnPct).toFixed(2)}% ${result.returnPct >= 0 ? "gain" : "decline"} after trading costs. ${result.tradeCount ? "The result comes from the recorded trade P&L on this generated path." : "The entry rules did not trigger any trades in this scenario."}`}
+                  />
+                </p>
+                <div className="ar-result-stage">
+                  <div className="ar-sim-metrics">
+                    <div>
+                      <small>Starting capital</small>
+                      <strong>$100.00</strong>
+                    </div>
+                    <div>
+                      <small>Ending equity</small>
+                      <strong>${(equity || 100).toFixed(2)}</strong>
+                    </div>
+                    <div>
+                      <small>Net return</small>
+                      <strong
+                        className={
+                          (equity || 100) >= 100 ? "ar-gain" : "ar-loss"
+                        }
+                      >
+                        {((equity || 100) - 100).toFixed(2)}%
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Closed trades</small>
+                      <strong>{point?.trades || 0}</strong>
+                    </div>
                   </div>
                 </div>
-                <svg
-                  className="ar-sim-chart"
-                  viewBox="0 0 640 190"
-                  role="img"
-                  aria-label="Simulated equity curve"
-                >
-                  <line
-                    x1="0"
-                    y1={170 - ((100 - low) / (high - low || 1)) * 150}
-                    x2="640"
-                    y2={170 - ((100 - low) / (high - low || 1)) * 150}
-                    stroke="currentColor"
-                    opacity=".2"
-                    strokeDasharray="5 5"
-                  />
-                  <polyline
-                    points={points}
-                    fill="none"
-                    stroke="var(--sim-line)"
-                    strokeWidth="3"
-                  />
-                </svg>
-                {progress === 1 && (
+                {reveal >= 1 && (
+                  <div className="ar-result-stage">
+                    <svg
+                      className="ar-sim-chart"
+                      viewBox="0 0 640 190"
+                      role="img"
+                      aria-label="Simulated equity curve"
+                    >
+                      <line
+                        x1="0"
+                        y1={170 - ((100 - low) / (high - low || 1)) * 150}
+                        x2="640"
+                        y2={170 - ((100 - low) / (high - low || 1)) * 150}
+                        stroke="currentColor"
+                        opacity=".2"
+                        strokeDasharray="5 5"
+                      />
+                      <polyline
+                        points={points}
+                        fill="none"
+                        stroke="var(--sim-line)"
+                        strokeWidth="3"
+                      />
+                    </svg>
+                    <p className="ar-result-narrative">
+                      <ChatText
+                        animate
+                        text={`The equity curve tracks account value through ${result.bars.toLocaleString()} synthetic market steps, including open-position moves. Maximum drawdown was ${result.drawdown.toFixed(2)}% from a previous equity peak. ${result.drawdown > 15 ? "This path exposed substantial downside; review position sizing and exit rules before relying on the strategy." : "This figure describes the worst peak-to-trough decline observed in this scenario, not a guaranteed future risk limit."}`}
+                      />
+                    </p>
+                  </div>
+                )}
+                {reveal >= 2 && progress === 1 && (
                   <>
                     <div className="ar-sim-score">
                       <strong>
@@ -229,8 +266,10 @@ export default function SimulationTest({
                       <div>
                         <b>Scenario score</b>
                         <p>
-                          Return, drawdown control and sample size. Not a
-                          prediction.
+                          <ChatText
+                            animate
+                            text={`Sample size: ${result.scoreBreakdown.sample.toFixed(1)}/20. Drawdown control: ${result.scoreBreakdown.risk.toFixed(1)}/40. Net return: ${result.scoreBreakdown.performance.toFixed(1)}/40. ${result.tradeCount ? "The total is rounded to a scenario score, not a prediction or ranking across different market paths." : "With no trades, the final score is zero regardless of the component values."}`}
+                          />
                         </p>
                       </div>
                     </div>
@@ -252,40 +291,63 @@ export default function SimulationTest({
                         <b>${result.fees.toFixed(2)}</b>
                       </div>
                     </div>
+                    <p className="ar-result-narrative">
+                      <ChatText
+                        animate
+                        text={`${result.trades.filter((t) => t.pnl > 0).length} trades closed in profit and ${result.trades.filter((t) => t.pnl < 0).length} closed at a loss. Total simulated costs were $${result.fees.toFixed(2)}. Win rate alone does not show profitability: the size of wins, losses and costs determines the net result.`}
+                      />
+                    </p>
                   </>
                 )}
-                <div className="ar-sim-rules">
-                  <b>
-                    {result.market} · {result.rules.approach}
-                  </b>
-                  <p>{result.rules.explanation}</p>
-                </div>
-                <details>
-                  <summary>Rules, scoring and assumptions</summary>
-                  <p>
-                    Lookback {result.rules.lookback} steps · Threshold{" "}
-                    {(result.rules.threshold * 100).toFixed(2)}% · Exposure{" "}
-                    {(result.rules.exposure * 100).toFixed(0)}% · Holding limit{" "}
-                    {result.rules.holdingBars} steps · Take profit{" "}
-                    {(result.rules.takeProfit * 100).toFixed(1)}%
-                  </p>
-                  <ul>
-                    {result.assumptions.map((a) => (
-                      <li key={a}>{a}</li>
-                    ))}
-                  </ul>
-                  <p>
-                    Seed: {result.seed}. Fresh runs use fresh scenarios. These
-                    results do not count toward marketplace listing tests.
-                  </p>
-                </details>
-                <button
-                  className="av-button"
-                  onClick={run}
-                  disabled={progress < 1}
-                >
-                  Run a new scenario
-                </button>
+                {reveal >= 3 && (
+                  <div className="ar-result-stage">
+                    <div className="ar-sim-rules">
+                      <b>
+                        {result.market} · {result.rules.approach}
+                      </b>
+                      <p>
+                        <ChatText animate text={result.rules.explanation} />
+                      </p>
+                      <p>
+                        <ChatText
+                          animate
+                          text={`This ${result.rules.approach} proxy uses ${result.rules.lookback} prior steps and a ${(result.rules.threshold * 100).toFixed(2)}% entry threshold. It targets ${(result.rules.exposure * 100).toFixed(0)}% of available capital per position, capped by the blueprint trade limit. Positions exit at the blueprint stop, a ${(result.rules.takeProfit * 100).toFixed(1)}% take-profit move, or ${result.rules.holdingBars} steps. Stops use observed prices, so gaps can exceed the intended stop distance.`}
+                        />
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {reveal >= 4 && (
+                  <div className="ar-result-stage">
+                    <details>
+                      <summary>Rules, scoring and assumptions</summary>
+                      <p>
+                        Lookback {result.rules.lookback} steps · Threshold{" "}
+                        {(result.rules.threshold * 100).toFixed(2)}% · Exposure{" "}
+                        {(result.rules.exposure * 100).toFixed(0)}% · Holding
+                        limit {result.rules.holdingBars} steps · Take profit{" "}
+                        {(result.rules.takeProfit * 100).toFixed(1)}%
+                      </p>
+                      <ul>
+                        {result.assumptions.map((a) => (
+                          <li key={a}>{a}</li>
+                        ))}
+                      </ul>
+                      <p>
+                        Seed: {result.seed}. Fresh runs use fresh scenarios.
+                        These results do not count toward marketplace listing
+                        tests.
+                      </p>
+                    </details>
+                    <button
+                      className="av-button"
+                      onClick={run}
+                      disabled={progress < 1}
+                    >
+                      Run a new scenario
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
