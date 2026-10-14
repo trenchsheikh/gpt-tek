@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@metamask/connect-solana": "^2.1.1",
     "@solana-program/token": "^0.17.0",
     "@solana/kit": "^8.4.0",
     "@solana/web3.js": "^1.98.4",
+    "@wallet-standard/app": "^1.1.1",
     "bs58": "^6.0.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",

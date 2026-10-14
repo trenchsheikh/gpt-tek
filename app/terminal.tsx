@@ -5,6 +5,11 @@ import Link from "next/link";
 import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
+import { getWallets } from "@wallet-standard/app";
+import {
+  compatibleSolanaWallet,
+  standardProvider,
+} from "@/lib/wallet-standard";
 import { ChatText, Thinking } from "./chat-text";
 import SimulationTest from "./simulation-test";
 import { SiteControls, XLink, AppArrival } from "./site-controls";
@@ -93,20 +98,49 @@ type Provider = {
   signTransaction: (t: VersionedTransaction) => Promise<VersionedTransaction>;
   signAndSendTransaction: (t: Transaction) => Promise<{ signature: string }>;
 };
-let chosenWallet: "Phantom" | "Solflare" = "Phantom";
-function walletProvider() {
+let chosenWallet = "Phantom";
+let activeProvider: { name: string; provider: Provider } | null = null;
+async function walletProvider(): Promise<Provider> {
+  if (activeProvider?.name === chosenWallet) return activeProvider.provider;
+  let standard = getWallets()
+    .get()
+    .find((w) => w.name === chosenWallet && compatibleSolanaWallet(w));
+  if (chosenWallet === "MetaMask" && !standard) {
+    const { createSolanaClient } = await import("@metamask/connect-solana");
+    const client = await createSolanaClient({
+      dapp: {
+        name: "AgentRouter",
+        url: window.location.origin,
+        iconUrl: window.location.origin + "/avelis-logo.png",
+      },
+      api: {
+        supportedNetworks: { mainnet: "https://api.mainnet-beta.solana.com" },
+      },
+    });
+    standard = client.getWallet();
+  }
+  if (standard) {
+    const provider = standardProvider(standard);
+    activeProvider = { name: chosenWallet, provider };
+    return provider;
+  }
   const w = window as unknown as {
     phantom?: { solana: Provider };
-    solana?: Provider;
+    solana?: Provider & { isPhantom?: boolean };
     solflare?: Provider;
   };
-  const p =
-    chosenWallet === "Solflare" ? w.solflare : w.phantom?.solana || w.solana;
-  if (!p)
+  const provider =
+    chosenWallet === "Solflare"
+      ? w.solflare
+      : chosenWallet === "Phantom"
+        ? w.phantom?.solana || (w.solana?.isPhantom ? w.solana : undefined)
+        : undefined;
+  if (!provider)
     throw new Error(
-      "Open this site in your wallet browser, or install the selected wallet extension.",
+      `Install or open ${chosenWallet} with Solana support, then reconnect.`,
     );
-  return p;
+  activeProvider = { name: chosenWallet, provider };
+  return provider;
 }
 async function api(path: string, body?: unknown, method = "POST") {
   const r = await fetch(
@@ -150,6 +184,33 @@ function ProviderIcon({ provider }: { provider: string }) {
 }
 export default function Terminal() {
   const [view, setView] = useState("Build");
+  const [walletNames, setWalletNames] = useState<string[]>([
+    "Phantom",
+    "Solflare",
+    "MetaMask",
+  ]);
+  useEffect(() => {
+    const registry = getWallets();
+    const sync = () =>
+      setWalletNames([
+        ...new Set([
+          "Phantom",
+          "Solflare",
+          "MetaMask",
+          ...registry
+            .get()
+            .filter(compatibleSolanaWallet)
+            .map((w) => w.name),
+        ]),
+      ]);
+    sync();
+    const offRegister = registry.on("register", sync);
+    const offUnregister = registry.on("unregister", sync);
+    return () => {
+      offRegister();
+      offUnregister();
+    };
+  }, []);
   const [session, setSession] = useState<{
     user?: { name?: string | null; id?: string };
   } | null>(null);
@@ -340,7 +401,7 @@ export default function Terminal() {
     }
   }
   async function connect() {
-    const r = await walletProvider().connect();
+    const r = await (await walletProvider()).connect();
     const a = r.publicKey.toString();
     setWallet(a);
     return a;
@@ -349,10 +410,9 @@ export default function Terminal() {
     await action(async () => {
       const address = await connect();
       const c = await api("/api/challenge", {});
-      const signed = await walletProvider().signMessage(
-        new TextEncoder().encode(c.message),
-        "utf8",
-      );
+      const signed = await (
+        await walletProvider()
+      ).signMessage(new TextEncoder().encode(c.message), "utf8");
       const result = await signIn("wallet", {
         address,
         signature: bs58.encode(signed.signature),
@@ -2017,7 +2077,9 @@ export default function Terminal() {
                             throw new Error(
                               "Quote expired. Request a fresh quote.",
                             );
-                          const signed = await walletProvider().signTransaction(
+                          const signed = await (
+                            await walletProvider()
+                          ).signTransaction(
                             VersionedTransaction.deserialize(
                               Uint8Array.from(atob(quote.transaction), (c) =>
                                 c.charCodeAt(0),
@@ -2283,13 +2345,13 @@ export default function Terminal() {
                     : "Sign a one-time message to create your AgentRouter session. No payment or trade is requested."}
                 </p>
                 <div className="ar-wallet-choices">
-                  {["Phantom", "Solflare"].map((n) => (
+                  {walletNames.map((n) => (
                     <button
                       key={n}
                       className="at-outline"
                       disabled={busy || (modal === "login" && !status.database)}
                       onClick={() => {
-                        chosenWallet = n as "Phantom" | "Solflare";
+                        chosenWallet = n;
                         if (modal === "wallet")
                           action(async () => {
                             await connect();
@@ -2304,8 +2366,10 @@ export default function Terminal() {
                   ))}
                 </div>
                 <p className="at-footnote">
-                  On mobile, open AgentRouter inside the Phantom or Solflare app
-                  browser.
+                  MetaMask connects through its Solana connector. Other
+                  installed Solana wallets appear automatically when they
+                  support message signing. On mobile, use your wallet browser or
+                  MetaMask connection prompt.
                 </p>
                 {!status.database && (
                   <small className="at-footnote">
@@ -2379,8 +2443,9 @@ export default function Terminal() {
                                 c.charCodeAt(0),
                               ),
                             );
-                            const payment =
-                              await walletProvider().signAndSendTransaction(tx);
+                            const payment = await (
+                              await walletProvider()
+                            ).signAndSendTransaction(tx);
                             try {
                               await new Connection(
                                 process.env.NEXT_PUBLIC_SOLANA_RPC_URL ||
