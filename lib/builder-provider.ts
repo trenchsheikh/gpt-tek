@@ -1,4 +1,4 @@
-// Flash-Lite keeps chat costs low. Only retry a model-access 404, never quota/key errors.
+// Flash-Lite keeps chat costs low. Retry model access or temporary overload, never quota/key errors.
 export const DEFAULT_BUILDER_MODEL = "gemini-3.1-flash-lite";
 export async function generateBlueprint(
   key: string,
@@ -23,7 +23,7 @@ export async function generateBlueprint(
         body: JSON.stringify(body),
       },
     );
-    if (response.status !== 404) break;
+    if (![404, 503].includes(response.status)) break;
   }
   return response;
 }

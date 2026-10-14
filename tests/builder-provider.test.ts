@@ -42,3 +42,14 @@ test("does not amplify quota failures or override explicit model configuration",
   await generateBlueprint("test-key", {}, "gemini-custom", unavailable);
   assert.equal(calls, 2);
 });
+
+test("temporary provider overload falls back without storing an unsuccessful turn", async () => {
+  let calls = 0;
+  const request = (async () =>
+    new Response("{}", { status: ++calls === 1 ? 503 : 200 })) as typeof fetch;
+  assert.equal(
+    (await generateBlueprint("test-key", {}, undefined, request)).status,
+    200,
+  );
+  assert.equal(calls, 2);
+});
