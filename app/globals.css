@@ -5817,3 +5817,5 @@ html[data-theme="dark"] :is(.ar-chat-notice, .at-notice) {
     animation: none;
   }
 }
+
+.ar-wallet-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }

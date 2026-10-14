@@ -184,6 +184,7 @@ function ProviderIcon({ provider }: { provider: string }) {
 }
 export default function Terminal() {
   const [view, setView] = useState("Build");
+  const [walletIcons, setWalletIcons] = useState<Record<string, string>>({});
   const [walletNames, setWalletNames] = useState<string[]>([
     "Phantom",
     "Solflare",
@@ -191,7 +192,15 @@ export default function Terminal() {
   ]);
   useEffect(() => {
     const registry = getWallets();
-    const sync = () =>
+    const sync = () => {
+      setWalletIcons(
+        Object.fromEntries(
+          registry
+            .get()
+            .filter(compatibleSolanaWallet)
+            .map((w) => [w.name, w.icon]),
+        ),
+      );
       setWalletNames([
         ...new Set([
           "Phantom",
@@ -203,6 +212,7 @@ export default function Terminal() {
             .map((w) => w.name),
         ]),
       ]);
+    };
     sync();
     const offRegister = registry.on("register", sync);
     const offUnregister = registry.on("unregister", sync);
@@ -2360,17 +2370,17 @@ export default function Terminal() {
                         else login();
                       }}
                     >
-                      <Wallet size={18} />
+                      <img
+                        className="ar-wallet-logo"
+                        src={
+                          walletIcons[n] || `/wallets/${n.toLowerCase()}.svg`
+                        }
+                        alt=""
+                      />
                       {n}
                     </button>
                   ))}
                 </div>
-                <p className="at-footnote">
-                  MetaMask connects through its Solana connector. Other
-                  installed Solana wallets appear automatically when they
-                  support message signing. On mobile, use your wallet browser or
-                  MetaMask connection prompt.
-                </p>
                 {!status.database && (
                   <small className="at-footnote">
                     Wallet sign-in is waiting for the marketplace database
