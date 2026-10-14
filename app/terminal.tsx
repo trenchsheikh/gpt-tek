@@ -142,7 +142,7 @@ function ProviderIcon({ provider }: { provider: string }) {
 export default function Terminal() {
   const [view, setView] = useState("Build");
   const [session, setSession] = useState<{
-    user?: { name?: string | null };
+    user?: { name?: string | null; id?: string };
   } | null>(null);
   const [catalogue, setCatalogue] = useState<Model[]>([]);
   const [status, setStatus] = useState({
@@ -1575,13 +1575,15 @@ export default function Terminal() {
                   } as Plan;
                   setSelected({ ...selected, plan: updated });
                   setNotice(
-                    "Save integration preferences before running this agent.",
+                    "Integration selected for this run. Creators can also save it to their agent.",
                   );
                 }}
               />
               <button
                 className="at-outline"
-                disabled={busy}
+                disabled={
+                  busy || session?.user?.id !== `wallet:${selected.wallet}`
+                }
                 onClick={() =>
                   action(async () => {
                     const r = await api(
@@ -1599,7 +1601,9 @@ export default function Terminal() {
                   })
                 }
               >
-                Save integration
+                {session?.user?.id === `wallet:${selected.wallet}`
+                  ? "Save integration"
+                  : "Creator settings"}
               </button>
             </section>
             <div className="at-test-layout">
@@ -1685,6 +1689,8 @@ export default function Terminal() {
                         action(async () => {
                           await api("/api/paper", {
                             agentId: selected.id,
+                            integration: selected.plan?.integration,
+                            target: selected.plan?.target,
                             apiKey: apiKey || undefined,
                           });
                           setRuns(

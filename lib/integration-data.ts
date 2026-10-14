@@ -71,24 +71,28 @@ export async function integrationData(plan: {
     const d = await read(
       "https://gamma-api.polymarket.com/public-search?q=" +
         encodeURIComponent(query) +
-        "&limit_per_type=5",
+        "&limit_per_type=10&events_status=active&keep_closed_markets=0",
     );
-    records = (d.events || []).slice(0, 5).map((e: any) => ({
-      title: e.title,
-      description: String(e.description || "").slice(0, 800),
-      markets: (e.markets || [])
-        .filter((m: any) => m.active && !m.closed)
-        .slice(0, 5)
-        .map((m: any) => ({
-          id: m.id,
-          question: m.question,
-          outcomes: m.outcomes,
-          prices: m.outcomePrices,
-          liquidity: m.liquidity,
-          volume: m.volume,
-          endDate: m.endDate,
-        })),
-    }));
+    records = (d.events || [])
+      .slice(0, 10)
+      .map((e: any) => ({
+        title: e.title,
+        description: String(e.description || "").slice(0, 800),
+        markets: (e.markets || [])
+          .filter((m: any) => m.active && !m.closed)
+          .slice(0, 5)
+          .map((m: any) => ({
+            id: m.id,
+            question: m.question,
+            outcomes: m.outcomes,
+            prices: m.outcomePrices,
+            liquidity: m.liquidity,
+            volume: m.volume,
+            endDate: m.endDate,
+          })),
+      }))
+      .filter((e: any) => e.markets.length > 0)
+      .slice(0, 5);
   } else {
     const d = await read(
       "https://api.dexscreener.com/latest/dex/search?q=" +

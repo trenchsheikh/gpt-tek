@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { integrationNames } from "@/lib/integrations";
 import { supportsSwaps } from "@/lib/integrations";
 import { integrationData } from "@/lib/integration-data";
 import { research } from "@/lib/research";
@@ -33,9 +35,13 @@ export async function POST(r: Request) {
     sameOrigin(r);
     const uid = await user();
     await limit(`paper:${uid}`, 12, 3600);
-    const { agentId, apiKey } = await r.json();
+    const body = await r.json();
+    const { agentId, apiKey } = body;
     const agent = await agentAccess(agentId, uid);
     const p = planSchema.parse(agent.plan);
+    if (body.integration)
+      p.integration = z.enum(integrationNames).parse(body.integration);
+    if (body.target) p.target = z.string().min(1).max(80).parse(body.target);
     if (!p.market)
       p.market =
         p.category === "Trenches"
