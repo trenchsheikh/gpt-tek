@@ -77,3 +77,17 @@ test("templates distinguish prediction markets and token discovery from enabled 
   assert.match(templates["Prediction markets"].strategy, /unavailable/);
   assert.match(templates.Trenches.strategy, /SOL\/USDC only/);
 });
+
+test("nullable optional metadata and long display rationales do not reject a safe blueprint", () => {
+  const normalized = validateBuilderResult(
+    {
+      ...result,
+      plan: { ...plan, market: null, integration: null, target: null },
+      reasons: { ...result.reasons, research: "Evidence ".repeat(60) },
+    },
+    catalogue,
+  );
+  assert.equal(normalized.plan?.name, plan.name);
+  assert.ok(normalized.reasons.research.length <= 240);
+  assert.equal(normalized.plan?.integration, undefined);
+});

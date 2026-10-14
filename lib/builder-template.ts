@@ -51,7 +51,33 @@ export const builderResultSchema = z.object({
   }),
 });
 export function validateBuilderResult(raw: unknown, catalogue: Model[]) {
-  const result = builderResultSchema.parse(raw);
+  // Optional fields may be emitted as null; display text can be bounded safely.
+  const normalized =
+    raw && typeof raw === "object"
+      ? (structuredClone(raw) as Record<string, any>)
+      : raw;
+  if (normalized && typeof normalized === "object") {
+    const n = normalized as Record<string, any>;
+    if (typeof n.message === "string") n.message = n.message.slice(0, 900);
+    if (n.reasons && typeof n.reasons === "object")
+      for (const role of ["research", "reasoning", "decision", "execution"])
+        if (typeof n.reasons[role] === "string")
+          n.reasons[role] = n.reasons[role].slice(0, 240);
+    if (n.plan && typeof n.plan === "object") {
+      if (typeof n.plan.name === "string")
+        n.plan.name = n.plan.name.slice(0, 60);
+      if (typeof n.plan.description === "string")
+        n.plan.description = n.plan.description.slice(0, 300);
+    }
+    if (n.plan && typeof n.plan === "object")
+      for (const field of ["market", "integration", "target"])
+        if (
+          n.plan[field] === null ||
+          (typeof n.plan[field] === "string" && !n.plan[field].trim())
+        )
+          delete n.plan[field];
+  }
+  const result = builderResultSchema.parse(normalized);
   if (!result.inScope)
     return {
       ...result,
