@@ -169,9 +169,6 @@ export default function SimulationTest({
               A generated scenario, not historical performance. No real funds or
               trades.
             </p>
-            <small className="ar-sim-provenance">
-              Gemini-powered simulation
-            </small>
             {busy && <SimulationOffice key={variant} variant={variant} />}
             {error && (
               <div className="ar-chat-notice" role="alert">
@@ -192,6 +189,13 @@ export default function SimulationTest({
                   <strong>{Math.round(progress * 100)}%</strong>
                   <progress value={progress} max={1} />
                 </div>
+                {result.market === "Memecoin trading" && (
+                  <p className="ar-sim-subtitle">
+                    Extreme synthetic stress scenario: {result.scenario}.
+                    Conditions are deliberately exaggerated, not representative
+                    performance.
+                  </p>
+                )}
                 <p className="ar-result-narrative">
                   <ChatText
                     animate
@@ -321,6 +325,11 @@ export default function SimulationTest({
                   <div className="ar-result-stage">
                     <details>
                       <summary>Rules, scoring and assumptions</summary>
+                      <p>
+                        Simulation engine: {result.engine}. Configured blueprint
+                        models are not executed in this synthetic test.
+                      </p>
+                      <p>Stress scenario: {result.scenario}.</p>
                       <p>
                         Lookback {result.rules.lookback} steps · Threshold{" "}
                         {(result.rules.threshold * 100).toFixed(2)}% · Exposure{" "}

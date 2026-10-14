@@ -25,7 +25,7 @@ export default function Page() {
           <a href="#intelligence">Intelligence</a>
           <a href="#process">How it works</a>
           <Link href="/docs">Docs</Link>
-          <Link href="/app?view=market">Marketplace</Link>
+          <Link href="/app">Marketplace</Link>
         </nav>
         <SiteControls />
         <Link className="av-button" href="/app">
@@ -51,7 +51,7 @@ export default function Page() {
               <Link href="/app" className="av-button">
                 Build your agent <ArrowUpRight size={17} />
               </Link>
-              <Link href="/app?view=market" className="av-link">
+              <Link href="/app" className="av-link">
                 Explore agents <ArrowRight size={16} />
               </Link>
             </div>
@@ -192,7 +192,7 @@ export default function Page() {
               then rent access for the hours you need. Keep your trading funds
               in your own wallet.
             </p>
-            <Link href="/app?view=market" className="av-button">
+            <Link href="/app" className="av-button">
               Explore the marketplace <ArrowUpRight size={16} />
             </Link>
           </div>

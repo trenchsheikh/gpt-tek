@@ -29,9 +29,17 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
     return (state + 1) / 4294967297;
   };
   const market = plan.market || "Spot trading";
+  // Mix nearby replay seeds before selecting a stress regime.
+  for (let i = 0; i < 8; i++) random();
+  const scenario =
+    market === "Memecoin trading"
+      ? ["Momentum mania", "Liquidity collapse", "Volatile chop"][
+          Math.floor(random() * 3)
+        ]
+      : "Mixed market";
   const volatility =
     market === "Memecoin trading"
-      ? 0.035
+      ? 0.085
       : market === "Perp trading"
         ? 0.022
         : market === "Prediction markets"
@@ -62,10 +70,23 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
   for (let bar = 0; bar < bars; bar++) {
     if (bar % 100 === 0) regime = (random() - 0.5) * volatility * 0.35;
     const noise = (random() + random() + random() - 1.5) * volatility;
+    const bias =
+      scenario === "Momentum mania"
+        ? 0.017
+        : scenario === "Liquidity collapse"
+          ? -0.014
+          : 0;
+    const jump =
+      market === "Memecoin trading" && random() < 0.018
+        ? random() < 0.45
+          ? -(0.3 + random() * 1.5)
+          : 0.25 + random() * 0.9
+        : 0;
     // Synthetic path is generated independently of the strategy: no future data in entry signals.
     price = Math.max(
-      0.01,
-      price * Math.exp(noise + regime - (volatility * volatility) / 2),
+      0.000001,
+      price *
+        Math.exp(noise + regime + bias + jump - (volatility * volatility) / 2),
     );
     prices.push(price);
     const history = prices.slice(Math.max(0, bar - rules.lookback), bar);
@@ -150,6 +171,7 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
     mode: "synthetic" as const,
     seed,
     market,
+    scenario,
     initialCapital: 100,
     endingEquity: cash,
     profit,
@@ -172,7 +194,7 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
     curve,
     trades,
     assumptions: [
-      "Synthetic prices; 1,200 abstract time steps, not historical market data.",
+      "Synthetic prices; 1,200 abstract time steps, not historical market data. Memecoin stress scenarios add extreme upward and downward jumps, mania and liquidity-collapse regimes.",
       "Long-only proxy for the chosen market; no real order book, funding, yields, event resolution or venue execution.",
       "$100 starting capital; no leverage. Position sizing is capped by your blueprint and available capital.",
       "Costs include 10 bps per side plus configured slippage. Stops fill at observed prices and may gap.",

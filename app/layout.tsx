@@ -12,8 +12,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <script
           dangerouslySetInnerHTML={{
-            __html:
-              "try{var t=localStorage.getItem('agentrouter-theme');document.documentElement.dataset.theme=t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light'}catch(e){}",
+            __html: "document.documentElement.dataset.theme='light';",
           }}
         />
         {children}

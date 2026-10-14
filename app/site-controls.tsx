@@ -25,15 +25,17 @@ export function XLink() {
 export function ThemeToggle() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    setDark(document.documentElement.dataset.theme === "dark");
+    const sync = () =>
+      setDark(document.documentElement.dataset.theme === "dark");
+    sync();
+    window.addEventListener("agentrouter-theme", sync);
+    return () => window.removeEventListener("agentrouter-theme", sync);
   }, []);
   function toggle() {
     const value = !dark;
     setDark(value);
     document.documentElement.dataset.theme = value ? "dark" : "light";
-    try {
-      localStorage.setItem("agentrouter-theme", value ? "dark" : "light");
-    } catch {}
+    window.dispatchEvent(new Event("agentrouter-theme"));
   }
   return (
     <button
@@ -57,6 +59,8 @@ export function SiteControls() {
 export function AppArrival() {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
+    document.documentElement.dataset.theme = "light";
+    window.dispatchEvent(new Event("agentrouter-theme"));
     const timer = setTimeout(
       () => setVisible(false),
       matchMedia("(prefers-reduced-motion: reduce)").matches ? 100 : 1100,

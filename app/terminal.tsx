@@ -218,8 +218,6 @@ export default function Terminal() {
   const chatEnd = useRef<HTMLDivElement>(null);
   const previousView = useRef("Build");
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("view") === "market")
-      setView("Marketplace");
     getSession()
       .then(setSession)
       .catch(() => {});
