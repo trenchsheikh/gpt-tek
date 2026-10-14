@@ -5,6 +5,7 @@ import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
 import { ChatText, Thinking } from "./chat-text";
+import PoweredBy from "./powered-by";
 import IntegrationPicker from "./integration-picker";
 import { supportsSwaps } from "@/lib/integrations";
 import AgentAvatar, { avatarNames } from "./agent-avatar";
@@ -797,7 +798,7 @@ export default function Terminal() {
               }
             >
               <div className="at-config-title">
-                <span className="av-eyebrow">YOUR AGENT BLUEPRINT</span>
+                <span className="av-eyebrow">Agent blueprint</span>
                 <span className="at-pill">
                   {chatBusy
                     ? "Reviewing"
@@ -1072,26 +1073,29 @@ export default function Terminal() {
                   </>
                 )}
               </div>
-              <button
-                className="av-button at-full"
-                disabled={
-                  busy ||
-                  chatBusy ||
-                  (messages.length > 0 && chatStep < journey.length)
-                }
-                title={
-                  messages.length > 0 && chatStep < journey.length
-                    ? "Finish the conversation steps to save your agent"
-                    : undefined
-                }
-                onClick={save}
-              >
-                Save agent <ArrowUpRight size={16} />
-              </button>
-              <small className="at-footnote">
-                A saved draft needs five recorded forward tests before listing.
-                Live execution requires wallet approval.
-              </small>
+              <footer className="ar-blueprint-footer">
+                <button
+                  className="av-button at-full"
+                  disabled={
+                    busy ||
+                    chatBusy ||
+                    (messages.length > 0 && chatStep < journey.length)
+                  }
+                  title={
+                    messages.length > 0 && chatStep < journey.length
+                      ? "Finish the conversation steps to save your agent"
+                      : undefined
+                  }
+                  onClick={save}
+                >
+                  Save agent <ArrowUpRight size={16} />
+                </button>
+                <small className="at-footnote">
+                  A saved draft needs five recorded forward tests before
+                  listing. Live execution requires wallet approval.
+                </small>
+                <PoweredBy />
+              </footer>
             </section>
           </div>
         )}

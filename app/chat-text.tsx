@@ -21,9 +21,9 @@ export function ChatText({
             clearInterval(timer);
             return text.length;
           }
-          return Math.min(text.length, n + 2);
+          return Math.min(text.length, n + 5);
         }),
-      24,
+      16,
     );
     return () => clearInterval(timer);
   }, [text, animate]);

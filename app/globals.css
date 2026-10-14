@@ -4014,3 +4014,34 @@ a:focus-visible {
 @keyframes ar-welcome-leave{to{opacity:0;transform:translateY(-15px) scale(.97);visibility:hidden}}
 @keyframes ar-blueprint-reveal{from{opacity:.5;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.ar-welcome-leaving,.ar-blueprint-active .ar-blueprint-stats{animation:none}.ar-welcome-leaving{display:none}}
+/* Blueprint: fixed overview, independently scrolling controls, separated actions. */
+.at-configuration{gap:0;background:#f6f1fa;overflow:hidden;padding:20px;min-width:0}
+.at-config-title{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.at-config-title .av-eyebrow{font-size:13px;font-weight:650;letter-spacing:0;text-transform:none;color:#403153}
+.at-config-title .at-pill{border:1px solid #dfd5eb;background:#fcf9ff;border-radius:20px;padding:5px 8px;font-size:9px}
+.ar-blueprint-stats{flex-shrink:0;gap:6px;margin-bottom:14px}
+.ar-blueprint-stats>div{border-color:#e5ddeb;background:#fffdf8;padding:8px 10px;border-radius:10px}
+.ar-blueprint-stats small{font-size:9px;line-height:1.4}
+.ar-blueprint-stats strong{font-size:12px;line-height:1.4}
+.ar-config-tabs{flex-shrink:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:4px;background:#ede5f5;border-radius:10px;margin-bottom:14px}
+.ar-config-tabs button{min-width:0;padding:8px 3px;font-size:10px;line-height:1.25;border-radius:7px;white-space:nowrap;transition:background .18s,color .18s}
+.ar-config-tabs button.active{background:#fffdf8;box-shadow:0 1px 3px #3524450d}
+.ar-config-body{overflow-y:auto;overflow-x:hidden;flex:1 1 0;min-height:0;padding:1px 4px 12px 0;scrollbar-width:thin;scrollbar-color:#cbbadd transparent}
+.ar-config-body .at-roles{display:flex;flex-direction:column;gap:8px}
+.ar-config-body .at-roles>button{flex-shrink:0;min-width:0;margin:0;border:1px solid #e1d7ed;border-radius:10px;padding:12px 9px;background:#fffdf8;box-shadow:none;align-items:flex-start}
+.ar-config-body .at-roles>button>div{min-width:0;flex:1}
+.ar-config-body .ar-model-reason{line-height:1.5;white-space:normal;margin-top:6px}
+.ar-config-body .ar-avatar-preview{margin-bottom:12px}
+.ar-config-body .ar-avatar-picker{gap:5px;margin-bottom:12px}
+.ar-config-body .ar-avatar-picker button{min-width:0}
+.ar-blueprint-footer{flex-shrink:0;border-top:1px solid #e2d8ec;padding-top:12px;display:flex;flex-direction:column;gap:8px;background:#f6f1fa}
+.ar-blueprint-footer .at-full{width:100%;margin:0;min-height:40px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;border:1px solid #b9cf83;box-shadow:none}
+.ar-blueprint-footer .at-full:disabled{opacity:.55;cursor:not-allowed}
+.ar-blueprint-footer .at-footnote{font-size:9px;line-height:1.45;margin:0;color:#84718e}
+.ar-powered-by{display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;color:#726680;font-family:"DM Sans",sans-serif;font-size:11px;line-height:1.4;white-space:nowrap}
+.ar-powered-by img{width:18px;height:18px;object-fit:contain;opacity:.8}
+.ar-powered-by strong{color:#403153;font-weight:600}
+.ar-blueprint-footer .ar-powered-by{align-self:center;margin-top:2px;font-size:10px}
+.av-hero-note .ar-powered-by{font-size:12px;justify-content:flex-start}
+@media(max-width:999px){.ar-config-body{flex:auto;max-height:480px;min-height:0}.at-configuration{padding:18px}}
+@media(prefers-reduced-motion:reduce){.ar-config-tabs button{transition:none}}

@@ -1,3 +1,4 @@
+import PoweredBy from "./powered-by";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -52,8 +53,7 @@ export default function Page() {
               </Link>
             </div>
             <div className="av-hero-note">
-              <ShieldCheck size={14} /> Wallet-controlled execution. Clear
-              limits.
+              <PoweredBy />
             </div>
           </div>
           <div className="av-orchestration">
