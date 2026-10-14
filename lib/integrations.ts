@@ -12,6 +12,7 @@ export const integrationNames = [
 export type Integration = (typeof integrationNames)[number];
 
 export function platformsForMarket(market?: string): readonly Integration[] {
+  if (market === "Stock token trading") return ["DEX Screener"];
   if (market === "Memecoin trading")
     return ["Axiom", "Fomo", "GMGN", "Pump.fun"];
   if (market === "Prediction markets") return ["Polymarket", "Kalshi"];
@@ -72,7 +73,9 @@ export function supportsSwaps(plan: {
 }) {
   return (
     (!plan.market || plan.market === "Spot trading") &&
-    !["Trenches", "Prediction markets"].includes(plan.category || "") &&
+    !["Trenches", "Prediction markets", "Stock Tokens"].includes(
+      plan.category || "",
+    ) &&
     (!plan.integration || plan.integration === "Solana swaps")
   );
 }

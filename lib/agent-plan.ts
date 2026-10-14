@@ -21,6 +21,7 @@ export const planSchema = z.object({
     "Risk management",
     "Trenches",
     "Prediction markets",
+    "Stock Tokens",
   ]),
   models: z.object({
     research: z.string().min(1),

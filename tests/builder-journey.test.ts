@@ -77,3 +77,38 @@ test("platform is chosen by the user and overrides model guesses", () => {
     undefined,
   );
 });
+
+test("stock tokens have dedicated evidence and explicit research destinations", async () => {
+  const { inferMarket } = await import("../lib/builder-journey");
+  const { supportsSwaps } = await import("../lib/integrations");
+  const { planSchema } = await import("../lib/agent-plan");
+  const { integrationData } = await import("../lib/integration-data");
+  assert.equal(
+    inferMarket("Trade NVDAx stock tokens around earnings"),
+    "Stock token trading",
+  );
+  assert.ok(nextChoices(0).includes("Stock token trading"));
+  assert.ok(
+    nextChoices(1, { market: "Stock token trading" }).includes(
+      "Both with market-hours checks",
+    ),
+  );
+  assert.deepEqual(nextChoices(4, { market: "Stock token trading" }), [
+    "DEX Screener",
+    "Research only",
+  ]);
+  assert.equal(supportsSwaps({ market: "Stock token trading" }), false);
+  assert.equal(
+    supportsSwaps({ market: "Spot trading", category: "Stock Tokens" }),
+    false,
+  );
+  assert.ok(planSchema.shape.category.safeParse("Stock Tokens").success);
+  await assert.rejects(
+    integrationData({
+      market: "Stock token trading",
+      integration: "DEX Screener",
+      target: "NVDAx",
+    }),
+    /issuer-verified/,
+  );
+});

@@ -17,6 +17,36 @@ export type DocPage = {
 };
 export const documentation: DocPage[] = [
   {
+    slug: "stock-tokens",
+    group: "Trading workflows",
+    title: "Stock Tokens",
+    description: "Configure tokenized equity and ETF research strategies.",
+    sections: [
+      {
+        id: "configure",
+        title: "Configure a stock-token blueprint",
+        steps: [
+          "Choose Stock token trading in the builder, then specify earnings catalysts, momentum, mean reversion or rebalancing.",
+          "Choose risk, research coverage, timeframe and position cap. Review each recommended model rationale.",
+          "Select DEX Screener and paste an issuer-verified Solana mint. The feed matches the exact base-token address rather than trusting a ticker.",
+          "Save the agent in My agents under Stock Tokens. Synthetic testing uses a tokenized-equity proxy, not real stock prices.",
+        ],
+      },
+      {
+        id: "boundaries",
+        title: "Evidence and execution",
+        paragraphs: [
+          "Public pair data supplies price, volume and liquidity. It does not verify issuer backing, shareholder rights, company earnings, corporate actions or jurisdictional eligibility. Token exposure differs from direct share ownership; terms depend on the issuer.",
+          "Stock-token strategies can be built, saved, researched and tested synthetically. Live order execution and the marketplace listing eligibility needed for trading rentals are not enabled for this market. No stock-token blueprint can enter the SOL/USDC swap path.",
+        ],
+        link: {
+          label: "Issuer trading-hours guidance",
+          href: "https://xstocks.com/partners/learn/trading-hours",
+        },
+      },
+    ],
+  },
+  {
     slug: "overview",
     group: "Start here",
     title: "Introduction",
@@ -89,7 +119,7 @@ export const documentation: DocPage[] = [
         id: "build",
         title: "Build your blueprint",
         steps: [
-          "Describe the market and strategy: memecoins, perps, spot, prediction markets, DeFi, arbitrage, portfolio management or market research.",
+          "Describe the market and strategy: memecoins, perps, spot, stock tokens, prediction markets, DeFi, arbitrage, portfolio management or market research.",
           "Choose risk appetite, research scope, time horizon and maximum trade size in the guided replies.",
           "Review the recommended models and the reason for each choice. In Configure → AI models, select a fixed model or search for Auto Router.",
           "In Configure → Platform connection, choose a supported data feed and a token, symbol or event keyword.",

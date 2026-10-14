@@ -129,6 +129,47 @@ export default function Page() {
           </p>
           <ModelStrip />
         </section>
+        <section className="av-process" id="stock-tokens">
+          <span className="av-eyebrow">STOCK TOKENS</span>
+          <h2>
+            Equity strategies.
+            <br />
+            Onchain intelligence.
+          </h2>
+          <p>
+            Build stock-token strategies alongside memecoins, spot, perps and
+            prediction markets. Map your thesis to research, reasoning, risk
+            checks and execution planning.
+          </p>
+          <div className="av-process-grid">
+            {[
+              [
+                "Earnings catalysts",
+                "Research company news and earnings evidence before acting on a narrative.",
+              ],
+              [
+                "Momentum & mean reversion",
+                "Define trend signals, entry conditions and exits for tokenized equities.",
+              ],
+              [
+                "Liquidity & price gaps",
+                "Check token depth, spreads and deviations from the underlying stock.",
+              ],
+              [
+                "Risk before execution",
+                "Review issuer, eligibility, market hours and corporate actions. Research and synthetic testing are available; live stock-token execution is not connected.",
+              ],
+            ].map(([title, text]) => (
+              <article key={title}>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+          <Link href="/app" className="av-button">
+            Build a stock-token agent <ArrowUpRight size={16} />
+          </Link>
+        </section>
         <section id="process" className="av-process">
           <div className="av-section-line">
             <span className="av-eyebrow">

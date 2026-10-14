@@ -29,6 +29,15 @@ export async function integrationData(plan: {
   integration?: Integration;
   target?: string;
 }) {
+  const stock = plan.market === "Stock token trading";
+  if (stock && !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(plan.target?.trim() || ""))
+    throw new Error(
+      "Choose your stock token and enter its issuer-verified Solana mint address before checking research data.",
+    );
+  if (stock && plan.integration && plan.integration !== "DEX Screener")
+    throw new Error(
+      "Stock-token research uses DEX Screener. Live stock-token execution is not connected.",
+    );
   const name = plan.integration || defaultIntegration(plan.market);
   const query = z
     .string()
@@ -99,7 +108,10 @@ export async function integrationData(plan: {
         encodeURIComponent(query),
     );
     records = (d.pairs || [])
-      .filter((p: any) => p.chainId === "solana")
+      .filter(
+        (p: any) =>
+          p.chainId === "solana" && (!stock || p.baseToken?.address === query),
+      )
       .slice(0, 12)
       .map((p: any) => ({
         token: p.baseToken?.symbol,

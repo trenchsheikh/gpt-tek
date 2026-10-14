@@ -3,6 +3,7 @@ export const markets = [
   "Memecoin trading",
   "Perp trading",
   "Spot trading",
+  "Stock token trading",
   "Prediction markets",
   "DeFi and yield",
   "Arbitrage",
@@ -10,6 +11,8 @@ export const markets = [
   "Market research",
 ] as const;
 export const marketNotes: Record<string, string> = {
+  "Stock token trading":
+    "Tokenized equity and ETF exposure: verify issuer and mint, underlying-price freshness, market hours, earnings, corporate actions, liquidity and eligibility. Research and synthetic testing only; stock-token order execution is not connected.",
   "Memecoin trading":
     "Liquidity, holders and rug-risk checks before chasing momentum. Token execution needs a supported integration.",
   "Perp trading":
@@ -31,7 +34,7 @@ export const journey = [
   {
     key: "market",
     question:
-      "First, what arena are we building for? Memecoins, perps, spot, prediction markets, or another setup?",
+      "First, what arena are we building for? Memecoins, perps, spot, stock tokens, prediction markets, or another setup?",
     options: markets,
   },
   {
@@ -79,6 +82,8 @@ export function displayStep(step: number, preferences: Preferences) {
 }
 export function inferMarket(text: string) {
   const t = text.toLowerCase();
+  if (/stock|tokenized equit|tokenised equit|xstocks|aaplx|nvdax|tslax/.test(t))
+    return "Stock token trading";
   if (/memecoin|meme coin|trenches/.test(t)) return "Memecoin trading";
   if (/perp|futures/.test(t)) return "Perp trading";
   if (/prediction|polymarket|kalshi/.test(t)) return "Prediction markets";
@@ -100,6 +105,11 @@ export function stageFor(step: number, preferences: Preferences = {}) {
     };
   if (!stage || stage.key !== "research") return stage;
   const options: Record<string, readonly string[]> = {
+    "Stock token trading": [
+      "Earnings and company catalysts",
+      "Token liquidity and price gaps",
+      "Both with market-hours checks",
+    ],
     "Memecoin trading": [
       "Liquidity and holder scans",
       "Social momentum and narratives",
@@ -165,6 +175,9 @@ export function applyPreferences<
     ...(preferences.market
       ? {
           market: preferences.market,
+          ...(preferences.market === "Stock token trading"
+            ? { category: "Stock Tokens" }
+            : {}),
           integration: platformsForMarket(preferences.market).includes(
             preferences.execution as import("./integrations").Integration,
           )

@@ -10,6 +10,7 @@ export const agentInput = z.object({
     "Risk management",
     "Trenches",
     "Prediction markets",
+    "Stock Tokens",
   ]),
   hourlySol: z.number().min(0.000001).max(100).default(0.01),
   hourlyAgent: z.number().min(0.000001).max(1000000).default(10),

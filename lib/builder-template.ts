@@ -2,6 +2,13 @@ import { z } from "zod";
 import { planSchema } from "./agent-plan";
 import type { Model } from "./models";
 export const templates = {
+  "Stock Tokens": {
+    name: "Equity Token Scout",
+    description:
+      "A tokenized-stock and ETF research strategy with liquidity and issuer checks.",
+    strategy:
+      "Research tokenized equity momentum, earnings catalysts or mean reversion. Ask the user for the exact issuer-verified Solana token mint and underlying asset. Check eligibility, market hours, liquidity, spread, underlying-price freshness, corporate actions and issuer risks. Hold when evidence is missing. Never treat token ownership as shareholder rights. Public pair data cannot verify backing or earnings. Synthetic tests are proxies; no live stock-token orders are enabled.",
+  },
   Momentum: {
     name: "Momentum Scout",
     description: "A risk-bounded SOL momentum strategy.",

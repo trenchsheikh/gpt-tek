@@ -36,17 +36,21 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
       ? ["Momentum mania", "Liquidity collapse", "Volatile chop"][
           Math.floor(random() * 3)
         ]
-      : "Mixed market";
+      : market === "Stock token trading"
+        ? "Tokenized equity proxy"
+        : "Mixed market";
   const volatility =
     market === "Memecoin trading"
       ? 0.085
-      : market === "Perp trading"
-        ? 0.022
-        : market === "Prediction markets"
-          ? 0.017
-          : market === "DeFi and yield"
-            ? 0.005
-            : 0.012;
+      : market === "Stock token trading"
+        ? 0.009
+        : market === "Perp trading"
+          ? 0.022
+          : market === "Prediction markets"
+            ? 0.017
+            : market === "DeFi and yield"
+              ? 0.005
+              : 0.012;
   const bars = 1200;
   let price = 100,
     cash = 100,
@@ -195,6 +199,11 @@ export function simulate(rules: SimulationRules, plan: Limits, seed: number) {
     trades,
     assumptions: [
       "Synthetic prices; 1,200 abstract time steps, not historical market data. Memecoin stress scenarios add extreme upward and downward jumps, mania and liquidity-collapse regimes.",
+      ...(market === "Stock token trading"
+        ? [
+            "Stock-token proxy only: no earnings calendar, underlying equity feed, market closures, issuer backing or corporate actions are simulated.",
+          ]
+        : []),
       "Long-only proxy for the chosen market; no real order book, funding, yields, event resolution or venue execution.",
       "$100 starting capital; no leverage. Position sizing is capped by your blueprint and available capital.",
       "Costs include 10 bps per side plus configured slippage. Stops fill at observed prices and may gap.",

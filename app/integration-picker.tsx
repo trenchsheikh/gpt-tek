@@ -22,7 +22,9 @@ export default function IntegrationPicker({
   const name = integration;
   const info = name ? integrationInfo(name) : null;
   const choices = platformsForMarket(market);
-  const query = target || (name === "Polymarket" ? "esports" : "SOL");
+  const stock = market === "Stock token trading";
+  const query =
+    target || (stock ? "" : name === "Polymarket" ? "esports" : "SOL");
   const [state, setState] = useState("");
   const [loading, setLoading] = useState(false);
   async function check() {
@@ -56,7 +58,7 @@ export default function IntegrationPicker({
             setState("");
             onChange(
               e.target.value as Integration,
-              e.target.value === "Polymarket" ? "esports" : "SOL",
+              stock ? "" : e.target.value === "Polymarket" ? "esports" : "SOL",
             );
           }}
         >
@@ -72,11 +74,13 @@ export default function IntegrationPicker({
         </select>
       </label>
       <label>
-        {name === "Polymarket"
-          ? "Event keyword"
-          : name === "Hyperliquid"
-            ? "Perp symbol"
-            : "Token symbol or address"}
+        {stock
+          ? "Issuer-verified Solana token mint"
+          : name === "Polymarket"
+            ? "Event keyword"
+            : name === "Hyperliquid"
+              ? "Perp symbol"
+              : "Token symbol or address"}
         <input
           value={query}
           maxLength={80}
@@ -87,6 +91,13 @@ export default function IntegrationPicker({
           }}
         />
       </label>
+      {stock && (
+        <p>
+          Paste the exact token mint from the issuer. This feed checks public
+          pair liquidity, not backing, earnings or eligibility. Live stock-token
+          order execution is unavailable.
+        </p>
+      )}
       <div className="ar-integration-status">
         <span className="ar-status-dot" />
         {info?.mode || "Choose a platform to see connection capabilities"}

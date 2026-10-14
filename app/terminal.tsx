@@ -692,8 +692,8 @@ export default function Terminal() {
                           "Build a SOL/USDC spot momentum agent with tight risk limits and wallet-approved swaps.",
                         ],
                         [
-                          "Find yield worth the risk",
-                          "Build a DeFi research agent comparing yield sustainability, protocol risks and exit liquidity.",
+                          "Trade stock-token catalysts",
+                          "Build a stock token trading agent to research earnings catalysts and momentum on tokenized equities. Ask which stock token and issuer-verified mint I want. Check liquidity, market hours, price gaps and downside before each decision.",
                         ],
                       ].map(([label, prompt]) => (
                         <button
@@ -941,6 +941,7 @@ export default function Terminal() {
                           "Risk management",
                           "Trenches",
                           "Prediction markets",
+                          "Stock Tokens",
                         ].map((c) => (
                           <option key={c}>{c}</option>
                         ))}
@@ -1095,6 +1096,7 @@ export default function Terminal() {
                   "Risk management",
                   "Trenches",
                   "Prediction markets",
+                  "Stock Tokens",
                 ].map((c) => (
                   <button
                     key={c}
@@ -1562,9 +1564,11 @@ export default function Terminal() {
                   selected.plan?.market ||
                   (selected.category === "Trenches"
                     ? "Memecoin trading"
-                    : selected.category === "Prediction markets"
-                      ? "Prediction markets"
-                      : "Spot trading")
+                    : selected.category === "Stock Tokens"
+                      ? "Stock token trading"
+                      : selected.category === "Prediction markets"
+                        ? "Prediction markets"
+                        : "Spot trading")
                 }
                 integration={selected.plan?.integration}
                 target={selected.plan?.target}
@@ -1594,7 +1598,11 @@ export default function Terminal() {
                         id: selected.id,
                         integration:
                           selected.plan?.integration || "Solana swaps",
-                        target: selected.plan?.target || "SOL",
+                        target:
+                          selected.plan?.target ||
+                          (selected.plan?.market === "Stock token trading"
+                            ? ""
+                            : "SOL"),
                       },
                       "PATCH",
                     );
