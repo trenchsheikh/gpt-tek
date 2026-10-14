@@ -5,6 +5,8 @@ import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
 import { ChatText, Thinking } from "./chat-text";
+import SimulationTest from "./simulation-test";
+import { SiteControls, XLink, AppArrival } from "./site-controls";
 import PoweredBy from "./powered-by";
 import IntegrationPicker from "./integration-picker";
 import { supportsSwaps } from "@/lib/integrations";
@@ -507,6 +509,7 @@ export default function Terminal() {
     .slice(0, 100);
   return (
     <div className="at-shell">
+      <AppArrival />
       <header className="ar-app-nav">
         <Link href="/" className="av-brand">
           <img src="/avelis-logo.png" alt="" />
@@ -531,7 +534,10 @@ export default function Terminal() {
           ))}
         </nav>
         <div className="ar-nav-account">
-          <Link href="/docs" className="at-outline">Docs</Link>
+          <SiteControls />
+          <Link href="/docs" className="at-outline">
+            Docs
+          </Link>
           <button
             className={view === "Settings" ? "active" : ""}
             aria-label="Settings"
@@ -1053,6 +1059,7 @@ export default function Terminal() {
                 )}
               </div>
               <footer className="ar-blueprint-footer">
+                {plan.strategy.length >= 30 && <SimulationTest plan={plan} />}
                 <button
                   className="av-button at-full"
                   disabled={
@@ -1603,6 +1610,12 @@ export default function Terminal() {
                   : "Creator settings"}
               </button>
             </section>
+            <div className="ar-simulation-entry">
+              <SimulationTest id={selected.id} />
+              <span>
+                Stress-test your strategy on synthetic data. Starts with $100.
+              </span>
+            </div>
             <div className="at-test-layout">
               <section className="at-test-main">
                 <div className="at-panel">
@@ -2027,6 +2040,11 @@ export default function Terminal() {
           </main>
         )}
       </div>
+      <footer className="ar-app-footer">
+        <Link href="/docs">Docs</Link>
+        <XLink />
+        <span>AgentRouter</span>
+      </footer>
       {modal && (
         <div className="at-backdrop" onClick={() => !busy && setModal(null)}>
           <div
@@ -2114,13 +2132,22 @@ export default function Terminal() {
                           {m.id === "openrouter/auto" ? (
                             "Prompt-based selection · Pricing follows the selected model"
                           ) : (
-                            <>{Math.round(m.context / 1000)}k context · ${m.inputPrice.toFixed(2)} input / ${m.outputPrice.toFixed(2)} output per 1M tokens</>
+                            <>
+                              {Math.round(m.context / 1000)}k context · $
+                              {m.inputPrice.toFixed(2)} input / $
+                              {m.outputPrice.toFixed(2)} output per 1M tokens
+                            </>
                           )}
                         </small>
                         <span>
-                          {m.id === "openrouter/auto"
-                            ? "Routes each role by task and prompt; capabilities vary"
-                            : <>{m.reasoning ? "Reasoning · " : ""}{m.tools ? "Tool support" : "Text generation"}</>}
+                          {m.id === "openrouter/auto" ? (
+                            "Routes each role by task and prompt; capabilities vary"
+                          ) : (
+                            <>
+                              {m.reasoning ? "Reasoning · " : ""}
+                              {m.tools ? "Tool support" : "Text generation"}
+                            </>
+                          )}
                         </span>
                       </div>
                       {(pickStage === "architect"
