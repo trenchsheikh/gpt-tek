@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getChat } from "@/lib/builder-chats";
-import { nextChoices } from "@/lib/builder-journey";
+import { nextChoices, displayStep } from "@/lib/builder-journey";
 import { user, fail } from "@/lib/http";
 export async function GET(r: Request) {
   try {
@@ -16,7 +16,11 @@ export async function GET(r: Request) {
           { status: 404 },
         );
       return Response.json(
-        { ...chat, choices: nextChoices(chat.step) },
+        {
+          ...chat,
+          step: displayStep(chat.step, chat.preferences),
+          choices: nextChoices(chat.step, chat.preferences),
+        },
         { headers: { "Cache-Control": "no-store" } },
       );
     }

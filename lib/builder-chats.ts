@@ -21,7 +21,18 @@ export async function getChat(
     "SELECT id,title,messages,plan,reasons,preferences,step,revision FROM builder_chats WHERE id=$1 AND owner=$2",
     [id, owner],
   );
-  return r.rows[0] || null;
+  const chat = r.rows[0] as BuilderChat | undefined;
+  if (chat?.plan && !chat.preferences.market)
+    chat.preferences.market =
+      chat.plan.market ||
+      (chat.plan.category === "Trenches"
+        ? "Memecoin trading"
+        : chat.plan.category === "Prediction markets"
+          ? "Prediction markets"
+          : chat.plan.category === "DeFi"
+            ? "DeFi and yield"
+            : "Spot trading");
+  return chat || null;
 }
 export async function saveChat(chat: BuilderChat, owner: string) {
   const r = await db().query(

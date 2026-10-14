@@ -108,7 +108,10 @@ export async function POST(r: Request) {
       .parse(b);
     const agent = await agentAccess(input.agentId, uid);
     const plan = planSchema.parse(agent.plan);
-    if (["Trenches", "Prediction markets"].includes(plan.category))
+    if (
+      (plan.market && plan.market !== "Spot trading") ||
+      ["Trenches", "Prediction markets"].includes(plan.category)
+    )
       throw new Error(
         "This category requires its trading-platform integration before testing or execution.",
       );

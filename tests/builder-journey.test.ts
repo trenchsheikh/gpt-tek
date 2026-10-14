@@ -20,5 +20,24 @@ test("guided choices enforce risk and size without accumulating duplicate strate
   assert.equal(updated.slippageBps, 30);
   assert.match(updated.strategy, /Paper testing first/);
   assert.deepEqual(applyPreferences(updated, preferences), updated);
-  assert.equal(nextChoices(6).length, 0);
+  assert.equal(nextChoices(6, { market: "Spot trading" }).length, 0);
+});
+
+test("market-specific research and execution choices reflect available integrations", () => {
+  assert.ok(
+    nextChoices(1, { market: "Memecoin trading" }).includes(
+      "Both with rug-risk checks",
+    ),
+  );
+  assert.ok(
+    nextChoices(1, { market: "Perp trading" }).includes(
+      "Both with liquidation checks",
+    ),
+  );
+  assert.ok(
+    !nextChoices(4, { market: "Perp trading" }).includes(
+      "Wallet-approved swaps",
+    ),
+  );
+  assert.ok(nextChoices(0).includes("Prediction markets"));
 });

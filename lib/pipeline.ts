@@ -7,7 +7,10 @@ export async function pipeline(
   key?: string,
 ) {
   const p = planSchema.parse(agent.plan);
-  if (["Trenches", "Prediction markets"].includes(p.category))
+  if (
+    (p.market && p.market !== "Spot trading") ||
+    ["Trenches", "Prediction markets"].includes(p.category)
+  )
     throw new Error(
       "This category requires its trading-platform integration before testing or execution.",
     );

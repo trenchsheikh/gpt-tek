@@ -27,6 +27,7 @@ import {
   BrainCircuit,
 } from "lucide-react";
 import type { Model } from "@/lib/models";
+import { journey, markets } from "@/lib/builder-journey";
 import { planSchema, stages } from "@/lib/agent-plan";
 import type { z } from "zod";
 type Plan = z.infer<typeof planSchema>;
@@ -649,18 +650,18 @@ export default function Terminal() {
                     <img src="/avelis-logo.png" alt="" />
                     <h2>What should your agent do?</h2>
                     <p>
-                      Tell your architect the strategy, timeframe, and risk
-                      limits you have in mind. It’ll help you build the plan and
-                      choose models for every role.
+                      Pick your market. We’ll map the playbook, dial in risk and
+                      choose the right model for each job, with a reason for
+                      every pick.
                     </p>
                     <div className="at-starters">
-                      {[
-                        "Build a cautious SOL momentum agent",
-                        "Help me manage SOL and USDC exposure",
-                        "Build a prediction-market research agent",
-                        "Build a Trenches discovery agent",
-                      ].map((t) => (
-                        <button key={t} onClick={() => setDraft(t)}>
+                      {markets.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() =>
+                            send(`I want to build an agent for ${t}.`)
+                          }
+                        >
                           {t}
                           <ArrowUpRight size={14} />
                         </button>
@@ -711,8 +712,8 @@ export default function Terminal() {
                 )}
                 {messages.length > 0 && (
                   <div className="ar-journey-progress">
-                    {chatStep < 6
-                      ? `Step ${chatStep + 1} of 6 · Refine your blueprint`
+                    {chatStep < journey.length
+                      ? `Step ${chatStep + 1} of ${journey.length} · Refine your blueprint`
                       : "Blueprint ready · Refine it or save your agent"}
                   </div>
                 )}
@@ -988,10 +989,12 @@ export default function Terminal() {
               <button
                 className="av-button at-full"
                 disabled={
-                  busy || chatBusy || (messages.length > 0 && chatStep < 6)
+                  busy ||
+                  chatBusy ||
+                  (messages.length > 0 && chatStep < journey.length)
                 }
                 title={
-                  messages.length > 0 && chatStep < 6
+                  messages.length > 0 && chatStep < journey.length
                     ? "Finish the conversation steps to save your agent"
                     : undefined
                 }

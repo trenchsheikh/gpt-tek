@@ -26,7 +26,7 @@ const result = {
   plan,
   reasons: {
     research: "Evidence gathering",
-    reasoning: "Analysis",
+    reasoning: "Risk and strategy analysis",
     decision: "Structured decision",
     execution: "Planning only",
   },

@@ -41,13 +41,13 @@ export const templates = {
 };
 export const builderResultSchema = z.object({
   inScope: z.boolean(),
-  message: z.string().min(1).max(500),
+  message: z.string().min(1).max(900),
   plan: planSchema.nullable(),
   reasons: z.object({
-    research: z.string().max(180),
-    reasoning: z.string().max(180),
-    decision: z.string().max(180),
-    execution: z.string().max(180),
+    research: z.string().max(240),
+    reasoning: z.string().max(240),
+    decision: z.string().max(240),
+    execution: z.string().max(240),
   }),
 });
 export function validateBuilderResult(raw: unknown, catalogue: Model[]) {
@@ -60,6 +60,10 @@ export function validateBuilderResult(raw: unknown, catalogue: Model[]) {
       plan: null,
     };
   if (result.plan) {
+    if (
+      Object.values(result.reasons).some((reason) => reason.trim().length < 10)
+    )
+      throw new Error("Explain each model choice.");
     for (const id of Object.values(result.plan.models))
       if (!catalogue.some((m) => m.id === id))
         throw new Error(
@@ -68,7 +72,7 @@ export function validateBuilderResult(raw: unknown, catalogue: Model[]) {
   }
   return {
     ...result,
-    message: result.message.split(/\s+/).slice(0, 60).join(" "),
+    message: result.message.split(/\s+/).slice(0, 90).join(" "),
   };
 }
 export function isInjection(text: string) {
