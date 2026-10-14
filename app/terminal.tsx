@@ -987,7 +987,14 @@ export default function Terminal() {
               </div>
               <button
                 className="av-button at-full"
-                disabled={busy}
+                disabled={
+                  busy || chatBusy || (messages.length > 0 && chatStep < 6)
+                }
+                title={
+                  messages.length > 0 && chatStep < 6
+                    ? "Finish the conversation steps to save your agent"
+                    : undefined
+                }
                 onClick={save}
               >
                 Save agent <ArrowUpRight size={16} />

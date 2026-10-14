@@ -190,6 +190,8 @@ export async function POST(r: Request) {
         { status: 502 },
       );
     }
+    if (!result.inScope)
+      return finish(result.message, chat?.plan || null, chat?.reasons);
     let proposed = result.plan;
     if (proposed && chat)
       proposed = planSchema.parse(applyPreferences(proposed, chat.preferences));
