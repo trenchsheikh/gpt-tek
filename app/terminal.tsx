@@ -290,6 +290,13 @@ export default function Terminal() {
   }
   async function refresh(v = view) {
     const id = ++serial.current;
+    if (v !== "Marketplace" && !session?.user) {
+      setAgents([]);
+      setRentals([]);
+      setError("");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -1119,7 +1126,14 @@ export default function Terminal() {
               }{" "}
               agents
             </div>
-            {loading ? (
+            {view === "My agents" && !session?.user ? (
+              <Empty
+                title="Sign in to see your agents."
+                text="Connect your wallet to build and manage your agents."
+                onClick={() => setModal("login")}
+                button="Sign in"
+              />
+            ) : loading ? (
               <Empty title="Loading your network…" loading />
             ) : error ? (
               <Empty
@@ -1420,7 +1434,14 @@ export default function Terminal() {
         )}
         {view === "Rentals" && (
           <main className="at-content">
-            {loading ? (
+            {!session?.user ? (
+              <Empty
+                title="Sign in to see your rentals."
+                text="Your wallet signature creates your AgentRouter identity."
+                onClick={() => setModal("login")}
+                button="Sign in"
+              />
+            ) : loading ? (
               <Empty title="Loading rentals…" loading />
             ) : error ? (
               <Empty
