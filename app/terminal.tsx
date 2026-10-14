@@ -531,6 +531,7 @@ export default function Terminal() {
           ))}
         </nav>
         <div className="ar-nav-account">
+          <Link href="/docs" className="at-outline">Docs</Link>
           <button
             className={view === "Settings" ? "active" : ""}
             aria-label="Settings"
@@ -2110,13 +2111,16 @@ export default function Terminal() {
                       <div>
                         <strong>{m.name}</strong>
                         <small>
-                          {Math.round(m.context / 1000)}k context · $
-                          {m.inputPrice.toFixed(2)} input / $
-                          {m.outputPrice.toFixed(2)} output per 1M tokens
+                          {m.id === "openrouter/auto" ? (
+                            "Prompt-based selection · Pricing follows the selected model"
+                          ) : (
+                            <>{Math.round(m.context / 1000)}k context · ${m.inputPrice.toFixed(2)} input / ${m.outputPrice.toFixed(2)} output per 1M tokens</>
+                          )}
                         </small>
                         <span>
-                          {m.reasoning ? "Reasoning · " : ""}
-                          {m.tools ? "Tool support" : "Text generation"}
+                          {m.id === "openrouter/auto"
+                            ? "Routes each role by task and prompt; capabilities vary"
+                            : <>{m.reasoning ? "Reasoning · " : ""}{m.tools ? "Tool support" : "Text generation"}</>}
                         </span>
                       </div>
                       {(pickStage === "architect"

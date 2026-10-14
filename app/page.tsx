@@ -23,6 +23,7 @@ export default function Page() {
         <nav>
           <a href="#intelligence">Intelligence</a>
           <a href="#process">How it works</a>
+          <Link href="/docs">Docs</Link>
           <Link href="/app?view=market">Marketplace</Link>
         </nav>
         <Link className="av-button" href="/app">
@@ -120,7 +121,7 @@ export default function Page() {
             Mix leading models across research, reasoning, decisions, and
             execution planning.
             <br />
-            Your AI architect helps you choose. You keep the final say.
+            Choose a model for each role, or use OpenRouter Auto Router to select\n            a model based on each task and prompt. You keep the final say.
           </p>
           <ModelStrip />
         </section>
@@ -335,6 +336,7 @@ export default function Page() {
           <img src="/avelis-logo.png" alt="" />
           AgentRouter
         </Link>
+        <Link href="/docs">Documentation</Link>
         <span>Independent intelligence. Connected by Solana.</span>
         <small>AI decisions and paper results do not guarantee returns.</small>
       </footer>

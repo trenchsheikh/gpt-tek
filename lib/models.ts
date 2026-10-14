@@ -19,7 +19,7 @@ export async function models(): Promise<Model[]> {
       "The model catalogue is temporarily unavailable. Please retry.",
     );
   const d = await r.json();
-  return d.data
+  const catalogue: Model[] = d.data
     .filter((m: { id: string }) => !m.id.startsWith("openrouter/"))
     .filter((m: { architecture?: { output_modalities?: string[] } }) =>
       m.architecture?.output_modalities?.includes("text"),
@@ -44,6 +44,17 @@ export async function models(): Promise<Model[]> {
         description: m.description?.slice(0, 500) || "",
       }),
     );
+  return [{
+    id: "openrouter/auto",
+    name: "Auto Router",
+    provider: "openrouter",
+    context: 0,
+    inputPrice: 0,
+    outputPrice: 0,
+    reasoning: false,
+    tools: false,
+    description: "Prompt-based routing through OpenRouter. The underlying model, context limit and price depend on the route selected for each request.",
+  }, ...catalogue];
 }
 export async function complete(
   model: string,
