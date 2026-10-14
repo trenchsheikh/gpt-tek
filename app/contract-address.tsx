@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
-export const contractAddress = "4kZVkhfMFEJhntYtoHTHiyfZLxV8VCLkfrp2PfLVpump";
+export const contractAddress = "91hzStSgXNtwfc9WRXM6wHqCukbethtifhWq8UA8pump";
 export default function ContractAddress({ full = false }: { full?: boolean }) {
   const [status, setStatus] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
