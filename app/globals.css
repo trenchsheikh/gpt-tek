@@ -4078,3 +4078,8 @@ a:focus-visible {
 .ar-blueprint-footer .ar-powered-by{align-self:center;padding:9px 13px;gap:5px}
 .ar-blueprint-footer .ar-powered-wordmark strong{font-size:13px}
 .ar-blueprint-footer .ar-powered-wordmark img{width:20px;height:20px}
+.ar-powered-by,.av-hero-note .ar-powered-by,.ar-blueprint-footer .ar-powered-by{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;gap:5px}
+.ar-powered-by .ar-powered-label{color:#897994;font-size:10px}
+.ar-powered-by .ar-powered-wordmark strong{color:#403153}
+.ar-powered-by .ar-powered-wordmark img{width:26px;height:26px;mix-blend-mode:multiply;object-fit:contain}
+.ar-blueprint-footer .ar-powered-wordmark img{width:23px;height:23px}

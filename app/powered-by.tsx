@@ -8,7 +8,7 @@ export default function PoweredBy() {
     >
       <span className="ar-powered-label">Powered by</span>
       <span className="ar-powered-wordmark">
-        <img src="/providers/openrouter.svg" alt="" width="23" height="23" />
+        <img src="/providers/openrouter-lime.png" alt="" width="23" height="23" />
         <strong>OpenRouter</strong>
       </span>
     </a>
