@@ -6,9 +6,10 @@ export default function PoweredBy() {
       target="_blank"
       rel="noreferrer"
     >
-      <img src="/providers/openrouter.svg" alt="" width="18" height="18" />
-      <span>
-        Powered by <strong>OpenRouter</strong>
+      <span className="ar-powered-label">Powered by</span>
+      <span className="ar-powered-wordmark">
+        <img src="/providers/openrouter.svg" alt="" width="23" height="23" />
+        <strong>OpenRouter</strong>
       </span>
     </a>
   );
