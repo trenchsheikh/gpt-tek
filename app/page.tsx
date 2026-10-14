@@ -58,6 +58,13 @@ export default function Page() {
             </div>
           </div>
           <div className="av-orchestration">
+            <div className="av-pixel-scene">
+              <img
+                src="/pixel-world.svg"
+                alt="Pixel robot exploring a colourful world of trading intelligence"
+              />
+              <span>YOUR AGENT HAS ENTERED THE WORLD</span>
+            </div>
             <div className="av-visual-top">
               <span>
                 <span className="av-live-dot" /> INTELLIGENCE IN FORMATION
