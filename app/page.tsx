@@ -15,7 +15,7 @@ export default function Page() {
     <div className="av-landing">
       <header className="av-nav">
         <Link href="/" className="av-brand">
-          <img src="/avelis.svg" alt="Avelis" />
+          <img src="/avelis-logo.png" alt="Avelis" />
           avelis<span className="av-beta">BETA</span>
         </Link>
         <nav>
@@ -72,7 +72,7 @@ export default function Page() {
               <span>01 / 04</span>
             </div>
             <div className="av-core">
-              <img src="/avelis.svg" alt="" />
+              <img src="/avelis-logo.png" alt="" />
               <div>
                 <strong>Your strategy</strong>
                 <small>One coordinated agent</small>
@@ -231,7 +231,7 @@ export default function Page() {
           </div>
         </section>
         <section className="av-final-cta">
-          <img src="/avelis.svg" alt="" />
+          <img src="/avelis-logo.png" alt="" />
           <h2>Bring your own edge.</h2>
           <p>We’ll help you build the intelligence around it.</p>
           <Link className="av-button" href="/app">
@@ -241,7 +241,7 @@ export default function Page() {
       </main>
       <footer className="av-footer">
         <Link href="/" className="av-brand">
-          <img src="/avelis.svg" alt="" />
+          <img src="/avelis-logo.png" alt="" />
           avelis
         </Link>
         <span>Independent intelligence. Connected by Solana.</span>

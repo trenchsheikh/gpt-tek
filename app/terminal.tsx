@@ -408,7 +408,7 @@ export default function Terminal() {
     <div className="at-shell">
       <aside className={sidebar ? "at-sidebar open" : "at-sidebar"}>
         <Link href="/" className="av-brand">
-          <img src="/avelis.svg" alt="Avelis" />
+          <img src="/avelis-logo.png" alt="Avelis" />
           avelis
         </Link>
         <button
@@ -542,7 +542,7 @@ export default function Terminal() {
               <div className="at-messages">
                 {!messages.length ? (
                   <div className="at-chat-welcome">
-                    <img src="/avelis.svg" alt="" />
+                    <img src="/avelis-logo.png" alt="" />
                     <h2>What should your agent do?</h2>
                     <p>
                       Tell your architect the strategy, timeframe, and risk
@@ -1491,7 +1491,7 @@ export default function Terminal() {
               </>
             ) : modal === "login" ? (
               <>
-                <img className="at-login-logo" src="/avelis.svg" alt="" />
+                <img className="at-login-logo" src="/avelis-logo.png" alt="" />
                 <h2 id="at-dialog-title">Your intelligence starts here.</h2>
                 <p>
                   Sign a one-time message to create your Avelis session. No
