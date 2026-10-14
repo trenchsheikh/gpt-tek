@@ -223,6 +223,20 @@ export default function Terminal() {
   const serial = useRef(0);
   const chatEnd = useRef<HTMLDivElement>(null);
   const previousView = useRef("Build");
+  const pendingTerminal = useRef<string | null>(null);
+  useEffect(() => {
+    if (modal !== "login") pendingTerminal.current = null;
+  }, [modal]);
+  function gateTerminal(
+    event: React.MouseEvent<HTMLAnchorElement>,
+    url: string,
+  ) {
+    if (!session?.user) {
+      event.preventDefault();
+      pendingTerminal.current = url;
+      setModal("login");
+    }
+  }
   useEffect(() => {
     getSession()
       .then(setSession)
@@ -347,8 +361,13 @@ export default function Terminal() {
       });
       if (result?.error)
         throw new Error("Sign-in failed. Start a new wallet signature.");
-      setSession(await getSession());
+      const signedIn = await getSession();
+      if (!signedIn?.user) throw new Error("Sign-in failed. Please retry.");
+      setSession(signedIn);
+      const destination = pendingTerminal.current;
+      pendingTerminal.current = null;
       setModal(null);
+      if (destination) window.location.assign(destination);
     });
   }
   function picker(stage: string) {
@@ -851,6 +870,7 @@ export default function Terminal() {
               <div className="ar-config-body">
                 {configTab === "Integration" && (
                   <IntegrationPicker
+                    onOpenTerminal={gateTerminal}
                     market={plan.market}
                     integration={plan.integration}
                     target={plan.target}
@@ -1499,6 +1519,7 @@ export default function Terminal() {
                     <a
                       key={name}
                       href={info.url}
+                      onClick={(event) => gateTerminal(event, info.url)}
                       target="_blank"
                       rel="noreferrer"
                       className="at-outline"
@@ -1633,6 +1654,7 @@ export default function Terminal() {
             </div>
             <section className="at-panel">
               <IntegrationPicker
+                onOpenTerminal={gateTerminal}
                 market={
                   selected.plan?.market ||
                   (selected.category === "Trenches"

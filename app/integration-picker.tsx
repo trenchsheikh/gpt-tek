@@ -12,12 +12,17 @@ export default function IntegrationPicker({
   target,
   onChange,
   disabled = false,
+  onOpenTerminal,
 }: {
   market?: string;
   integration?: Integration;
   target?: string;
   onChange: (integration: Integration, target: string) => void;
   disabled?: boolean;
+  onOpenTerminal?: (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    url: string,
+  ) => void;
 }) {
   const name = integration;
   const info = name ? integrationInfo(name) : null;
@@ -122,6 +127,7 @@ export default function IntegrationPicker({
           <a
             className="at-outline"
             href={info.url}
+            onClick={(event) => onOpenTerminal?.(event, info.url)}
             target="_blank"
             rel="noreferrer"
           >
