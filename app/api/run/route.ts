@@ -30,7 +30,7 @@ export async function POST(r: Request) {
         [
           {
             role: "system",
-            content: `You are an Avelis research agent. Strategy: ${a.strategy}. You have no live market tools in this endpoint. Never invent prices or trades.`,
+            content: `You are an AgentRouter research agent. Strategy: ${a.strategy}. You have no live market tools in this endpoint. Never invent prices or trades.`,
           },
           { role: "user", content: b.prompt },
         ],

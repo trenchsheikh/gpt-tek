@@ -1830,7 +1830,7 @@ small {
     transition: none !important;
   }
 }
-/* Avelis pixel playground: bold edges, tactile controls, calm readable copy. */
+/* AgentRouter pixel playground: bold edges, tactile controls, calm readable copy. */
 :root {
   --pixel-ink: #292f46;
   --pixel-paper: #fff9ed;
@@ -2829,4 +2829,20 @@ a:focus-visible {
 .at-live-panel > p,
 .at-agent-card p {
   color: #807087;
+}
+
+/* AgentRouter brand and concise two-line hero. */
+.av-brand { font-size: 23px; letter-spacing: -1px; }
+.av-hero { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 42px; }
+.av-hero h1 { font-size: clamp(30px, 3.1vw, 45px); letter-spacing: -1.5px; line-height: 1.35; }
+.av-hero h1 span, .av-hero h1 em { display: block; white-space: nowrap; }
+.av-hero-copy > p { max-width: 490px; font-size: 16px; line-height: 1.8; margin-top: 23px; }
+.at-sidebar > .av-brand { font-size: 20px; }
+@media (max-width: 900px) { .av-nav nav { gap: 16px; } .av-brand { font-size: 20px; } }
+@media (max-width: 760px) {
+ .av-hero { grid-template-columns: 1fr; gap: 35px; }
+ .av-hero h1 { font-size: clamp(25px, 7.4vw, 43px); letter-spacing: -1px; }
+ .av-hero-copy > p { font-size: 15px; }
+ .av-nav .av-brand { font-size: 17px; gap: 7px; }
+ .av-nav .av-beta { display: none; }
 }

@@ -1,4 +1,4 @@
-# Avelis
+# AgentRouter
 
 Multi-model Solana trading-agent studio and timed rental marketplace. Public landing page: `/`. App: `/app`. Existing GitHub and Vercel project identifiers remain `gpt-tek` so deployed links stay valid.
 
@@ -57,4 +57,4 @@ Tests cover payment spoofing/replay, rental expiry, owner access, mint instructi
 - Models/completions: https://openrouter.ai/docs
 - Swap order/execute: https://developers.jup.ag/docs/swap/order-and-execute
 - Spot market data: Coinbase SOL/USD spot API; this reference price is not an executable Jupiter quote.
-- Provider icons: `@lobehub/icons-static-svg`, MIT-licensed icon package. Provider marks belong to their respective owners; inclusion does not imply partnership. Avelis logo is an original SVG asset.
+- Provider icons: `@lobehub/icons-static-svg`, MIT-licensed icon package. Provider marks belong to their respective owners; inclusion does not imply partnership. AgentRouter logo is an original pixel robot asset.

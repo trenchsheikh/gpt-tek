@@ -408,8 +408,8 @@ export default function Terminal() {
     <div className="at-shell">
       <aside className={sidebar ? "at-sidebar open" : "at-sidebar"}>
         <Link href="/" className="av-brand">
-          <img src="/avelis-logo.png" alt="Avelis" />
-          avelis
+          <img src="/avelis-logo.png" alt="AgentRouter" />
+          AgentRouter
         </Link>
         <button
           className="at-new"
@@ -566,7 +566,7 @@ export default function Terminal() {
                   messages.map((m, i) => (
                     <article className={"at-message " + m.role} key={i}>
                       <span>
-                        {m.role === "user" ? "You" : "Avelis architect"}
+                        {m.role === "user" ? "You" : "AgentRouter architect"}
                       </span>
                       <div>
                         {m.content.replace(
@@ -905,7 +905,7 @@ export default function Terminal() {
                 text={
                   session
                     ? error
-                    : "Your wallet signature creates your Avelis identity."
+                    : "Your wallet signature creates your AgentRouter identity."
                 }
                 onClick={() => (session ? refresh() : setModal("login"))}
                 button={session ? "Retry" : "Sign in"}
@@ -1494,7 +1494,7 @@ export default function Terminal() {
                 <img className="at-login-logo" src="/avelis-logo.png" alt="" />
                 <h2 id="at-dialog-title">Your intelligence starts here.</h2>
                 <p>
-                  Sign a one-time message to create your Avelis session. No
+                  Sign a one-time message to create your AgentRouter session. No
                   payment or trade is requested.
                 </p>
                 <button

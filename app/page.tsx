@@ -15,8 +15,8 @@ export default function Page() {
     <div className="av-landing">
       <header className="av-nav">
         <Link href="/" className="av-brand">
-          <img src="/avelis-logo.png" alt="Avelis" />
-          avelis<span className="av-beta">BETA</span>
+          <img src="/avelis-logo.png" alt="AgentRouter" />
+          AgentRouter<span className="av-beta">BETA</span>
         </Link>
         <nav>
           <a href="#intelligence">Intelligence</a>
@@ -31,18 +31,16 @@ export default function Page() {
         <section className="av-hero">
           <div className="av-hero-copy">
             <div className="av-eyebrow">
-              <span /> YOUR NEXT EDGE STARTS HERE
+              <span /> YOUR STRATEGY. YOUR AGENT.
             </div>
             <h1>
-              Different minds.
-              <br />
-              One trading
-              <br />
-              <em>intelligence.</em>
+              <span>BUILD. TRAIN.</span>
+              <em>TRADE. EARN.</em>
             </h1>
             <p>
-              Build a Solana agent around your strategy. Choose the models that
-              power it. Test your thinking, then share your edge with the world.
+              Create your own autonomous AI trader using simple prompts. Develop
+              its strategy, let it trade on Solana, and earn when others rent your
+              agent.
             </p>
             <div className="av-actions">
               <Link href="/app" className="av-button">
@@ -242,7 +240,7 @@ export default function Page() {
       <footer className="av-footer">
         <Link href="/" className="av-brand">
           <img src="/avelis-logo.png" alt="" />
-          avelis
+          AgentRouter
         </Link>
         <span>Independent intelligence. Connected by Solana.</span>
         <small>AI decisions and paper results do not guarantee returns.</small>

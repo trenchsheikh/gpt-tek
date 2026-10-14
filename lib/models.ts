@@ -62,7 +62,7 @@ export async function complete(
     headers: {
       Authorization: `Bearer ${credential}`,
       "Content-Type": "application/json",
-      "X-Title": "Avelis",
+      "X-Title": "AgentRouter",
     },
     body: JSON.stringify({
       model,
