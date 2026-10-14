@@ -3,6 +3,7 @@ import { z } from "zod";
 import { planSchema } from "@/lib/agent-plan";
 import { simulationRules, simulate } from "@/lib/simulation";
 import { generateBlueprint } from "@/lib/builder-provider";
+import { geminiSchema } from "@/lib/gemini-schema";
 import { sameOrigin, user, fail } from "@/lib/http";
 import { limit } from "@/lib/limit";
 import { agentAccess } from "@/lib/access";
@@ -52,7 +53,8 @@ export async function POST(request: Request) {
         ],
         generationConfig: {
           responseMimeType: "application/json",
-          maxOutputTokens: 1000,
+          responseSchema: geminiSchema(z.toJSONSchema(simulationRules)),
+          maxOutputTokens: 2000,
           thinkingConfig: { thinkingLevel: "minimal" },
         },
       },
