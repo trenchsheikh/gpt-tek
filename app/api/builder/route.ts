@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { geminiSchema } from "@/lib/gemini-schema";
 import { planSchema } from "@/lib/agent-plan";
 import { models } from "@/lib/models";
 import {
@@ -79,18 +80,32 @@ export async function POST(r: Request) {
             temperature: 0.2,
             maxOutputTokens: 3500,
             responseMimeType: "application/json",
-            responseJsonSchema: schema,
+            responseSchema: geminiSchema(schema),
             thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       },
     );
-    if (!response.ok)
-      throw new Error(
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const diagnostic = String(error.error?.message || "")
+        .replace(/AIza[\w-]+|sk-[\w-]+|sb_secret_[\w-]+/g, "[redacted]")
+        .slice(0, 500);
+      console.error("builder_provider_failure", {
+        status: response.status,
+        code: error.error?.status,
+        message: diagnostic,
+      });
+      const message =
         response.status === 429
-          ? "The architect is busy. Please retry shortly."
-          : "The architect could not respond. Please retry.",
-      );
+          ? "The architect's AI quota is currently unavailable. Please retry shortly."
+          : response.status === 401 || response.status === 403
+            ? "The architect's AI key or permissions need attention."
+            : response.status === 404
+              ? "The configured architect model is unavailable."
+              : "The architect could not process this request. Please retry.";
+      return Response.json({ error: message }, { status: 502 });
+    }
     const data = await response.json();
     const text = data.candidates?.[0]?.content?.parts
       ?.filter(
@@ -99,7 +114,20 @@ export async function POST(r: Request) {
       .map((p: { text: string }) => p.text)
       .join("");
     if (!text) return Response.json(refusal);
-    const result = validateBuilderResult(JSON.parse(text), catalogue);
+    let result;
+    try {
+      result = validateBuilderResult(JSON.parse(text), catalogue);
+    } catch (e) {
+      console.error("builder_response_validation", {
+        message: e instanceof Error ? e.name : "invalid",
+      });
+      return Response.json({
+        output:
+          "I couldn’t finish a valid blueprint. Try a shorter strategy with your timeframe and trade limit.",
+        plan: null,
+        reasons: null,
+      });
+    }
     return Response.json({
       output: result.message,
       plan: result.plan,

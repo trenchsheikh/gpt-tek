@@ -514,10 +514,7 @@ export default function Terminal() {
                 <div>
                   <strong className="ar-section-label">Agent builder</strong>
                 </div>
-                <span className="ar-builder-provider">
-                  <ProviderIcon provider="google" />
-                  Gemini architect
-                </span>
+                <span className="ar-builder-provider">Strategy architect</span>
               </div>
               <div className="at-messages">
                 {!messages.length ? (
@@ -581,7 +578,7 @@ export default function Terminal() {
                   <span>
                     {chatBusy
                       ? "Architect is thinking…"
-                      : "Powered by Gemini · Strategy and model selection"}
+                      : "Strategy and model selection"}
                   </span>
                   <button
                     aria-label="Send message"
@@ -1585,7 +1582,7 @@ export default function Terminal() {
             <section className="at-panel">
               <h2>AI model access</h2>
               <p>
-                Gemini powers the architect. Add a model access key for strategy
+                The architect is connected. Add a model access key for strategy
                 tests. The key stays in page memory and is sent only when you
                 request a model response. Reloading clears it.
               </p>
