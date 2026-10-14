@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import ModelStrip from "./model-strip";
+import PixelPlayground from "./pixel-playground";
 export default function Page() {
   return (
     <div className="av-landing">
@@ -57,11 +58,7 @@ export default function Page() {
           </div>
           <div className="av-orchestration">
             <div className="av-pixel-scene">
-              <img
-                src="/pixel-world.svg"
-                alt="Pixel robot exploring a colourful world of trading intelligence"
-              />
-              <span>YOUR AGENT HAS ENTERED THE WORLD</span>
+              <PixelPlayground />
             </div>
             <div className="av-visual-top">
               <span>

@@ -3622,3 +3622,141 @@ a:focus-visible {
     padding: 40px 0;
   }
 }
+.pg-world {
+  position: relative;
+}
+.pg-world > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pg-caption {
+  display: block;
+  background: #d9eefa;
+  color: #7c7190;
+  text-align: right;
+  font-size: 8px;
+  font-family: "IBM Plex Mono", monospace;
+  padding: 6px 12px;
+}
+.pg-agent {
+  animation: pg-roam 14s ease-in-out infinite;
+  transform-box: view-box;
+}
+.pg-agent-1 {
+  animation-name: pg-roam-other;
+}
+.pg-agent-3 {
+  animation-name: pg-roam-other;
+}
+.pg-feet {
+  animation: pg-steps 0.7s steps(2, end) infinite;
+}
+.pg-bubble {
+  animation: pg-talk 12s steps(1, end) infinite;
+}
+.pg-signal {
+  animation: pg-message 7s ease-in-out infinite;
+}
+.pg-transfer {
+  animation: pg-message 7s ease-in-out -3s infinite;
+}
+.pg-coin {
+  animation: pg-rental 9s ease-in-out infinite;
+}
+.pg-cloud {
+  animation: pg-cloud-drift 24s ease-in-out infinite alternate;
+}
+.pg-live {
+  animation: pg-message 3s ease-in-out infinite;
+}
+@keyframes pg-roam {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(10px, 4px);
+  }
+  45% {
+    transform: translate(25px, -3px);
+  }
+  70% {
+    transform: translate(5px, 5px);
+  }
+}
+@keyframes pg-roam-other {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-22px, 6px);
+  }
+  60% {
+    transform: translate(-9px, -4px);
+  }
+  80% {
+    transform: translate(8px, 3px);
+  }
+}
+@keyframes pg-steps {
+  to {
+    transform: translateY(-2px);
+  }
+}
+@keyframes pg-talk {
+  0%,
+  12%,
+  75%,
+  100% {
+    opacity: 0;
+  }
+  15%,
+  65% {
+    opacity: 1;
+  }
+}
+@keyframes pg-message {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  45%,
+  65% {
+    opacity: 1;
+  }
+}
+@keyframes pg-rental {
+  0%,
+  20% {
+    opacity: 0;
+    transform: translate(30px, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(25px, 0);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-25px, -30px);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: translate(-25px, -30px);
+  }
+}
+@keyframes pg-cloud-drift {
+  to {
+    transform: translateX(30px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pg-world * {
+    animation: none !important;
+  }
+  .pg-bubble {
+    opacity: 1;
+  }
+}
