@@ -1,3 +1,4 @@
+import ContractAddress from "./contract-address";
 import { appUrl, docsUrl, websiteUrl, docsLink } from "@/lib/site-urls";
 import { SiteControls, XLink } from "./site-controls";
 import PoweredBy from "./powered-by";
@@ -28,6 +29,7 @@ export default function Page() {
           <Link href={docsUrl}>Docs</Link>
           <Link href={appUrl}>Marketplace</Link>
         </nav>
+        <ContractAddress />
         <SiteControls />
         <Link className="av-button" href={appUrl}>
           Launch app <ArrowUpRight size={16} />
@@ -382,6 +384,7 @@ export default function Page() {
           <img src="/avelis-logo.png" alt="" />
           AgentRouter
         </Link>
+        <ContractAddress full />
         <Link href={docsUrl}>Documentation</Link>
         <XLink />
         <span>Independent intelligence. Connected by Solana.</span>

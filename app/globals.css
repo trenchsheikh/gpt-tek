@@ -5819,3 +5819,10 @@ html[data-theme="dark"] :is(.ar-chat-notice, .at-notice) {
 }
 
 .ar-wallet-logo { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+
+.ar-contract-address { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ar-border); border-radius: 8px; padding: 8px 10px; background: var(--ar-surface); color: var(--ar-text); cursor: pointer; font-size: 11px; max-width: 100%; }
+.ar-contract-address code { font-size: 11px; overflow-wrap: anywhere; user-select: all; }
+.ar-contract-address > span:first-child { color: var(--ar-muted); font-size: 10px; }
+.ar-contract-status:empty { display: none; }
+.ar-contract-address:hover { border-color: currentColor; }
+@media (max-width: 700px) { .av-nav { flex-wrap: wrap; } .av-nav .ar-contract-address { order: 5; margin: 0 auto; } .ar-contract-full { width: 100%; justify-content: center; } }
