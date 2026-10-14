@@ -5,6 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 test("schema supports agent ownership, rental expiry and payment replay prevention", async () => {
   const db = new PGlite();
   try {
+    await db.exec("CREATE ROLE anon; CREATE ROLE authenticated;");
     await db.exec(
       await readFile(new URL("../lib/schema.sql", import.meta.url), "utf8"),
     );

@@ -21,9 +21,9 @@ export function ChatText({
             clearInterval(timer);
             return text.length;
           }
-          return Math.min(text.length, n + 4);
+          return Math.min(text.length, n + 2);
         }),
-      18,
+      24,
     );
     return () => clearInterval(timer);
   }, [text, animate]);
@@ -41,7 +41,7 @@ export function ChatText({
 export function Thinking() {
   const [phase, setPhase] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setPhase((x) => (x + 1) % 3), 2200);
+    const t = setInterval(() => setPhase((x) => (x + 1) % 3), 3000);
     return () => clearInterval(t);
   }, []);
   return (

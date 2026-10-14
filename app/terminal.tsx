@@ -56,6 +56,7 @@ type Rental = {
   signature?: string;
 };
 type Msg = { role: "user" | "assistant"; content: string };
+type SavedChat = { id: string; title: string; updated_at: string };
 type Run = {
   id: string;
   price: number;
@@ -154,6 +155,16 @@ export default function Terminal() {
   const [selected, setSelected] = useState<Agent | null>(null);
   const [plan, setPlan] = useState<Plan>(defaultPlan);
   const [messages, setMessages] = useState<Msg[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
+  const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
+  const [moreChats, setMoreChats] = useState(false);
+  const [choices, setChoices] = useState<string[]>([]);
+  const [chatStep, setChatStep] = useState(0);
+  const [chatNotice, setChatNotice] = useState("");
+  const [pendingMessage, setPendingMessage] = useState("");
+  const [animateReply, setAnimateReply] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyBusy, setHistoryBusy] = useState(false);
   const [draft, setDraft] = useState("");
   const [modelReasons, setModelReasons] = useState<Record<string, string>>({});
   const [chatBusy, setChatBusy] = useState(false);
@@ -196,9 +207,9 @@ export default function Terminal() {
     expiresIn: number;
   } | null>(null);
   const [quoteTime, setQuoteTime] = useState(0);
-  const ready = useRef(false);
   const serial = useRef(0);
   const chatEnd = useRef<HTMLDivElement>(null);
+  const previousView = useRef("Build");
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("view") === "market")
       setView("Marketplace");
@@ -223,27 +234,20 @@ export default function Terminal() {
         }));
       })
       .catch((e) => setNotice(e.message));
-    try {
-      const stored = localStorage.getItem("avelis-draft-v1");
-      if (stored) {
-        const p = JSON.parse(stored);
-        if (p.plan) setPlan(p.plan);
-        if (p.messages) setMessages(p.messages);
-      }
-    } catch {}
-    ready.current = true;
+    // A visit starts a new conversation; previous chats remain in the sidebar.
+    localStorage.removeItem("avelis-draft-v1");
   }, []);
   useEffect(() => {
-    if (ready.current)
-      localStorage.setItem(
-        "avelis-draft-v1",
-        JSON.stringify({ plan, messages: messages.slice(-20) }),
-      );
-  }, [plan, messages]);
+    setSavedChats([]);
+    setMoreChats(false);
+    if (session?.user) loadChats();
+  }, [session]);
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages, busy]);
   useEffect(() => {
+    if (view === "Build" && previousView.current !== "Build") newChat();
+    previousView.current = view;
     if (["Marketplace", "My agents", "Rentals"].includes(view)) refresh(view);
   }, [view, session]);
   useEffect(() => {
@@ -345,38 +349,102 @@ export default function Terminal() {
       "Choose model"
     );
   }
-  async function send() {
-    if (!draft.trim() || chatBusy) return;
-    if (!session) {
+  async function loadChats(offset = 0) {
+    try {
+      const result = await api(`/api/chats?offset=${offset}`);
+      setSavedChats((p) => (offset ? [...p, ...result.chats] : result.chats));
+      setMoreChats(result.hasMore);
+    } catch {
+      setChatNotice("History couldn’t load. Try again.");
+    }
+  }
+  function newChat() {
+    if (chatBusy) return;
+    setChatId(null);
+    setMessages([]);
+    setChoices([]);
+    setChatStep(0);
+    setPlan(defaultPlan);
+    setModelReasons({});
+    setDraft("");
+    setChatNotice("");
+    setAnimateReply(false);
+    setHistoryOpen(false);
+    setConfigTab("Identity");
+  }
+  async function openChat(id: string) {
+    if (chatBusy || historyBusy) return;
+    setHistoryBusy(true);
+    try {
+      const c = await api(`/api/chats?id=${id}`);
+      setChatId(c.id);
+      setMessages(c.messages);
+      setChoices(c.choices);
+      setChatStep(c.step);
+      setPlan(c.plan || defaultPlan);
+      setModelReasons(c.reasons || {});
+      setAnimateReply(false);
+      setDraft("");
+      setChatNotice("");
+      setHistoryOpen(false);
+    } catch {
+      setChatNotice("Conversation couldn’t load. Try again.");
+    } finally {
+      setHistoryBusy(false);
+    }
+  }
+  async function send(text = draft, choice?: string) {
+    if (!text.trim() || chatBusy || historyBusy) return;
+    if (!session?.user) {
       setModal("login");
       return;
     }
     setChatBusy(true);
-    const next = [...messages, { role: "user" as const, content: draft }].slice(
-      -20,
-    );
-    setMessages(next);
-    setDraft("");
-    await action(async () => {
+    setChatNotice("");
+    setPendingMessage(text);
+    setAnimateReply(false);
+    const next = [...messages, { role: "user" as const, content: text }];
+    const id = chatId || crypto.randomUUID();
+    const started = Date.now();
+    try {
       const r = await api("/api/builder", {
-        messages: next,
+        messages: next.slice(-20),
         plan,
+        chatId: id,
+        choice,
       });
+      const proposed = r.plan ? planSchema.parse(r.plan) : null;
+      if (
+        proposed &&
+        !Object.values(proposed.models).every((model) =>
+          catalogue.some((m) => m.id === model),
+        )
+      )
+        throw new Error("Invalid blueprint");
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.max(0, 1800 - (Date.now() - started))),
+        );
+      setChatId(id);
       setMessages([...next, { role: "assistant", content: r.output }]);
-      if (r.plan) {
-        const proposed = planSchema.parse(r.plan);
-        if (
-          Object.values(proposed.models).every((id) =>
-            catalogue.some((m) => m.id === id),
-          )
-        ) {
-          setPlan(proposed);
-          setModelReasons(r.reasons || {});
-          setConfigTab("Models");
-        }
+      setChoices(r.choices || []);
+      setChatStep(r.step || 0);
+      setDraft("");
+      setAnimateReply(true);
+      if (proposed) {
+        setPlan(proposed);
+        setModelReasons(r.reasons || {});
+        setConfigTab("Models");
       }
-    });
-    setChatBusy(false);
+      await loadChats();
+    } catch {
+      // Keep unsuccessful turns out of the conversation and database.
+      setChatNotice("Couldn’t send. Your message is ready to retry.");
+      if (!choice) setDraft(text);
+    } finally {
+      setChatBusy(false);
+      setPendingMessage("");
+    }
   }
   async function save() {
     if (!session) {
@@ -509,9 +577,68 @@ export default function Terminal() {
         )}
         {view === "Build" && (
           <div className="at-builder">
+            <aside
+              className={"ar-chat-history " + (historyOpen ? "open" : "")}
+              aria-label="Saved conversations"
+            >
+              <button
+                className="ar-history-close"
+                aria-label="Close history"
+                onClick={() => setHistoryOpen(false)}
+              >
+                <X size={15} />
+              </button>
+              <button
+                className="ar-new-chat"
+                onClick={newChat}
+                disabled={chatBusy || historyBusy}
+              >
+                <Plus size={16} /> New chat
+              </button>
+              <div className="ar-history-list">
+                {savedChats.map((c) => (
+                  <button
+                    key={c.id}
+                    title={c.title}
+                    aria-current={chatId === c.id ? "true" : undefined}
+                    disabled={chatBusy || historyBusy}
+                    onClick={() => openChat(c.id)}
+                  >
+                    {c.title}
+                  </button>
+                ))}
+                {!savedChats.length && (
+                  <p>
+                    {session?.user
+                      ? "Your conversations will appear here."
+                      : "Sign in to save conversations."}
+                  </p>
+                )}
+                {moreChats && (
+                  <button onClick={() => loadChats(savedChats.length)}>
+                    Load older chats
+                  </button>
+                )}
+              </div>
+              <button
+                className="ar-history-refresh"
+                onClick={() => loadChats()}
+                disabled={!session?.user || chatBusy}
+              >
+                Refresh history
+              </button>
+            </aside>
             <section className="at-chat">
               <div className="at-chat-header">
                 <div>
+                  <button
+                    className="ar-history-toggle"
+                    aria-label="Toggle chat history"
+                    aria-expanded={historyOpen}
+                    onClick={() => setHistoryOpen(!historyOpen)}
+                  >
+                    <PanelLeftClose size={16} />
+                  </button>
                   <strong className="ar-section-label">Agent builder</strong>
                 </div>
                 <span className="ar-builder-provider">Strategy architect</span>
@@ -550,14 +677,56 @@ export default function Terminal() {
                         <ChatText
                           text={m.content}
                           animate={
-                            m.role === "assistant" && i === messages.length - 1
+                            animateReply &&
+                            m.role === "assistant" &&
+                            i === messages.length - 1
                           }
                         />
                       </div>
                     </article>
                   ))
                 )}
+                {pendingMessage && (
+                  <article className="at-message user">
+                    <span>You</span>
+                    <div>{pendingMessage}</div>
+                  </article>
+                )}
                 {chatBusy && <Thinking />}
+                {!!choices.length && !chatBusy && (
+                  <div
+                    className="ar-chat-choices"
+                    aria-label="Choose your agent preferences"
+                  >
+                    {choices.map((c) => (
+                      <button
+                        key={c}
+                        disabled={historyBusy}
+                        onClick={() => send(c, c)}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {messages.length > 0 && (
+                  <div className="ar-journey-progress">
+                    {chatStep < 6
+                      ? `Step ${chatStep + 1} of 6 · Refine your blueprint`
+                      : "Blueprint ready · Refine it or save your agent"}
+                  </div>
+                )}
+                {chatNotice && (
+                  <div className="ar-chat-notice" role="status">
+                    {chatNotice}
+                    <button
+                      aria-label="Dismiss chat notice"
+                      onClick={() => setChatNotice("")}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
                 <div ref={chatEnd} />
               </div>
               <form
@@ -571,7 +740,7 @@ export default function Terminal() {
                   aria-label="Message your agent architect"
                   placeholder="Describe the agent you want to build…"
                   value={draft}
-                  maxLength={6000}
+                  maxLength={3000}
                   onChange={(e) => setDraft(e.target.value)}
                 />
                 <div>
@@ -582,7 +751,12 @@ export default function Terminal() {
                   </span>
                   <button
                     aria-label="Send message"
-                    disabled={chatBusy || !draft.trim() || !status.builder}
+                    disabled={
+                      chatBusy ||
+                      historyBusy ||
+                      !draft.trim() ||
+                      !status.builder
+                    }
                   >
                     <ArrowUp size={18} />
                   </button>
@@ -1642,16 +1816,15 @@ export default function Terminal() {
             <section className="at-panel">
               <h2>Saved draft</h2>
               <p>
-                Your unsaved blueprint and builder conversation are saved in
-                this browser. Access keys are not saved.
+                Your successful conversations and blueprints are saved privately
+                to your account. Each visit starts a new chat. Access keys are
+                not saved.
               </p>
               <button
                 className="at-outline"
                 onClick={() => {
-                  setPlan(defaultPlan);
-                  setMessages([]);
-                  localStorage.removeItem("avelis-draft-v1");
-                  setNotice("Draft cleared.");
+                  newChat();
+                  setNotice("New conversation started.");
                 }}
               >
                 Clear this browser’s draft

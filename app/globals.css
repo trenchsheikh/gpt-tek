@@ -3971,3 +3971,23 @@ a:focus-visible {
     gap: 8px;
   }
 }
+/* Account-owned conversation history and guided builder choices. */
+.ar-chat-history{background:#f5efe5;border-right:1px solid #ded3ec;padding:16px 10px;display:flex;flex-direction:column;min-height:0;gap:14px}
+.ar-new-chat{display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid #d5c7e8;background:#ece3fa;border-radius:10px;padding:11px;font-weight:600;color:#302643}
+.ar-history-list{overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:5px}
+.ar-history-list button{border:0;background:transparent;text-align:left;padding:11px 10px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:#514264;flex-shrink:0}
+.ar-history-list button:hover,.ar-history-list button[aria-current=true]{background:#e8dff3;color:#241934}
+.ar-history-list p{font-size:12px;line-height:1.7;padding:8px;color:#84718e}
+.ar-history-refresh{border:0;background:none;color:#84718e;font-size:11px;padding:8px}
+.ar-chat-choices{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.ar-chat-choices button{border:1px solid #d3c4e9;border-radius:12px;background:#f4edfc;color:#403153;font-size:12px;padding:11px 14px;transition:background .2s,transform .2s}
+.ar-chat-choices button:hover{background:#e8dcfb;transform:translateY(-1px)}
+.ar-chat-notice{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#766581;background:#f5eff8;border-radius:8px;padding:10px;gap:10px}
+.ar-chat-notice button{border:0;background:none;display:flex}
+.ar-journey-progress{font-size:10px;color:#84718e;margin:12px 0}
+.ar-history-toggle{border:0;background:none;vertical-align:middle;padding:5px;display:none;color:#514264}
+@media(min-width:1200px){.at-builder{grid-template-columns:190px minmax(0,1fr) 330px}}
+@media(max-width:1199px){.ar-history-toggle{display:inline-flex}.ar-chat-history{display:none}.ar-chat-history.open{display:flex;position:absolute;z-index:15;top:0;bottom:0;left:0;width:230px;box-shadow:8px 0 25px #33214422}.at-builder{position:relative}.ar-chat-history.open::after{content:none}}
+@media(prefers-reduced-motion:reduce){.ar-chat-choices button{transition:none}.ar-chat-choices button:hover{transform:none}}
+.ar-history-close{display:none;border:0;background:none;align-self:flex-end;color:#514264}
+@media(max-width:1199px){.ar-history-close{display:flex}}

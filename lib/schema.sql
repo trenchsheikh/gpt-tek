@@ -26,3 +26,14 @@ ALTER TABLE paper_runs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trade_intents ENABLE ROW LEVEL SECURITY;
 CREATE INDEX IF NOT EXISTS rentals_agent ON rentals(agent_id);
 CREATE INDEX IF NOT EXISTS trade_intents_agent ON trade_intents(agent_id);
+CREATE TABLE IF NOT EXISTS builder_chats (
+ id uuid PRIMARY KEY, owner text NOT NULL, title text NOT NULL,
+ messages jsonb NOT NULL DEFAULT '[]', plan jsonb,
+ reasons jsonb NOT NULL DEFAULT '{}', preferences jsonb NOT NULL DEFAULT '{}',
+ step integer NOT NULL DEFAULT 0 CHECK(step BETWEEN 0 AND 6),
+ revision integer NOT NULL DEFAULT 1,
+ created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS builder_chats_owner_updated ON builder_chats(owner,updated_at DESC,id);
+ALTER TABLE builder_chats ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON builder_chats FROM anon,authenticated;
