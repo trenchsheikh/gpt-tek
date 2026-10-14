@@ -58,3 +58,11 @@ Tests cover payment spoofing/replay, rental expiry, owner access, mint instructi
 - Swap order/execute: https://developers.jup.ag/docs/swap/order-and-execute
 - Spot market data: Coinbase SOL/USD spot API; this reference price is not an executable Jupiter quote.
 - Provider icons: `@lobehub/icons-static-svg`, MIT-licensed icon package. Provider marks belong to their respective owners; inclusion does not imply partnership. AgentRouter logo is an original pixel robot asset.
+
+## AgentRouter rental launch configuration
+
+The AgentRouter organisation must contain a Supabase **project** before database-backed sign-in, drafts, and rentals can run. Run `lib/schema.sql` against that project's Postgres database and set `DATABASE_URL` in Vercel to its transaction-pooler connection string. Use the dashboard-provided host; do not guess it. Keep credentials server-only. All application tables have RLS enabled with no public API policies: Auth.js authenticates wallet sessions and server routes enforce ownership using the server database connection.
+
+Set `AGENT_TOKEN_MINT` to the verified official standard SPL token mint after launch. The rental checkout reads decimals from that mint, computes exact base units, builds a checked token transfer to the creator's associated token account, and verifies the mint, recipient, signer, amount, timestamp, and checkout memo before activating timed access. SOL is needed only for transaction fees and any recipient account creation. Token-2022 mints require a separate extension-aware implementation before activation.
+
+Demo marketplace agents are illustrative, have no performance claims, and cannot be rented. Avatar selection and colour are validated and saved with real drafts. Trading platform logos link out to their sites; direct account/trading integrations are planned and are not enabled.

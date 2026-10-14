@@ -4,7 +4,13 @@ export const agentInput = z.object({
   description: z.string().trim().min(10).max(300),
   strategy: z.string().trim().min(30).max(8000),
   category: z.enum(["Research", "Momentum", "DeFi", "Risk management"]),
-  hourlySol: z.number().min(0.000001).max(100),
+  hourlySol: z.number().min(0.000001).max(100).default(0.01),
+  hourlyAgent: z.number().min(0.000001).max(1000000).default(10),
+  avatar: z.number().int().min(0).max(5).default(0),
+  avatarColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .default("#bba7f5"),
   wallet: z.string().min(32).max(44),
   listed: z.boolean(),
 });

@@ -39,8 +39,8 @@ export default function Page() {
             </h1>
             <p>
               Create your own autonomous AI trader using simple prompts. Develop
-              its strategy, let it trade on Solana, and earn when others rent your
-              agent.
+              its strategy, let it trade on Solana, and earn when others rent
+              your agent.
             </p>
             <div className="av-actions">
               <Link href="/app" className="av-button">
@@ -157,7 +157,7 @@ export default function Page() {
                 n: "03",
                 icon: Layers,
                 t: "List your intelligence.",
-                d: "Set an hourly SOL price. Publish your tested agent for others to discover and rent.",
+                d: "Set an hourly $AGENT price. Publish your tested agent for others to discover and rent.",
               },
               {
                 n: "04",
@@ -176,6 +176,96 @@ export default function Page() {
               </article>
             ))}
           </div>
+        </section>
+        <section className="ar-rental-section" id="rent">
+          <div className="ar-rental-intro">
+            <span className="av-eyebrow">RENT AN AGENT</span>
+            <h2>
+              Find your next trader.
+              <br />
+              <em>Make it work for you.</em>
+            </h2>
+            <p>
+              Choose a strategy, compare its model lineup and recorded tests,
+              then rent access for the hours you need. Keep your trading funds
+              in your own wallet.
+            </p>
+            <Link href="/app?view=market" className="av-button">
+              Explore the marketplace <ArrowUpRight size={16} />
+            </Link>
+          </div>
+          <div className="ar-rental-steps">
+            {[
+              {
+                n: "01",
+                t: "Choose your intelligence",
+                d: "Review the strategy, model roles, trade limits and test history. Demo agents are clearly marked.",
+              },
+              {
+                n: "02",
+                t: "Set your time and budget",
+                d: "Choose 1–168 hours. See the hourly price and total in $AGENT before you sign.",
+              },
+              {
+                n: "03",
+                t: "Pay the creator in $AGENT",
+                d: "Rental payments go directly to the agent creator. SOL covers network fees. Token checkout opens after launch.",
+              },
+              {
+                n: "04",
+                t: "Connect. Review. Execute.",
+                d: "Access starts once payment is verified and ends automatically. Review each proposed swap before approving it in your wallet.",
+              },
+            ].map((x) => (
+              <article key={x.n}>
+                <span>{x.n}</span>
+                <div>
+                  <h3>{x.t}</h3>
+                  <p>{x.d}</p>
+                </div>
+              </article>
+            ))}
+            <div className="ar-solana-label">
+              <img src="/terminals/solana.png" alt="Solana" />
+              Built on Solana · Paid in $AGENT
+            </div>
+          </div>
+        </section>
+        <section className="ar-terminal-section">
+          <span className="av-eyebrow">YOUR AGENT. YOUR TRADING SETUP.</span>
+          <h2>
+            A home for your intelligence.
+            <br />A choice of trading platforms.
+          </h2>
+          <p>
+            We’re building toward connections with the platforms you already
+            use. Explore Axiom, GMGN, Pump.fun’s terminal and Fomo today. Direct
+            agent integrations are planned.
+          </p>
+          <div className="ar-terminal-grid">
+            {[
+              { name: "Axiom", logo: "axiom.svg", url: "https://axiom.trade" },
+              { name: "GMGN", logo: "gmgn.ico", url: "https://gmgn.ai" },
+              {
+                name: "Pump Terminal",
+                logo: "pump.svg",
+                url: "https://trade.padre.gg",
+              },
+              { name: "Fomo", logo: "fomo.svg", url: "https://fomo.family" },
+            ].map((t) => (
+              <a href={t.url} key={t.name} target="_blank" rel="noreferrer">
+                <img src={`/terminals/${t.logo}`} alt="" />
+                <strong>{t.name}</strong>
+                <small>
+                  Open platform <ArrowUpRight size={12} />
+                </small>
+              </a>
+            ))}
+          </div>
+          <small className="at-footnote">
+            Platform links do not grant AgentRouter access to your terminal
+            account or wallet.
+          </small>
         </section>
         <section className="av-split">
           <div>

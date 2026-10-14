@@ -7,6 +7,8 @@ export function db() {
     );
   return (globalDb.pool ??= new Pool({
     connectionString: process.env.DATABASE_URL,
-    max: 5,
+    max: 3,
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 30000,
   }));
 }

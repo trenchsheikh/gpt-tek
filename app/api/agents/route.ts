@@ -1,3 +1,4 @@
+import { demoAgents } from "@/lib/demo-agents";
 import { planSchema } from "@/lib/agent-plan";
 import { models } from "@/lib/models";
 import { limit } from "@/lib/limit";
@@ -9,15 +10,16 @@ import { user, fail, sameOrigin } from "@/lib/http";
 export async function GET(r: Request) {
   try {
     const mine = new URL(r.url).searchParams.has("mine");
+    if (!mine && !process.env.DATABASE_URL) return Response.json(demoAgents);
     const result = mine
       ? await db().query(
           "SELECT * FROM agents WHERE owner=$1 ORDER BY created_at DESC LIMIT 100",
           [await user()],
         )
       : await db().query(
-          "SELECT a.id,a.wallet,a.name,a.description,a.category,a.hourly_lamports,a.created_at,a.plan->'models' AS models,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner) AS paper_samples FROM agents a WHERE listed=true ORDER BY created_at DESC LIMIT 100",
+          "SELECT a.id,a.wallet,a.name,a.description,a.category,a.hourly_lamports,a.created_at,a.avatar,a.avatar_color,a.hourly_agent,a.plan->'models' AS models,jsonb_build_object('maxTradeUsd',a.plan->'maxTradeUsd','slippageBps',a.plan->'slippageBps','stopLossPct',a.plan->'stopLossPct') AS risk,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner) AS paper_samples FROM agents a WHERE listed=true ORDER BY created_at DESC LIMIT 100",
         );
-    return Response.json(result.rows);
+    return Response.json(mine ? result.rows : [...result.rows, ...demoAgents]);
   } catch (e) {
     return fail(e);
   }
@@ -29,7 +31,7 @@ export async function POST(r: Request) {
     await limit(`create:${owner}`, 20, 3600);
     const body = await r.json();
     const a = agentInput.parse(body);
-    const plan = body.plan ? planSchema.parse(body.plan) : null;
+    const plan = planSchema.parse(body.plan);
     if (plan) {
       const catalogue = await models();
       for (const id of Object.values(plan.models))
@@ -40,10 +42,12 @@ export async function POST(r: Request) {
           "Save a draft and complete five forward paper tests before publishing.",
         );
     }
+    if (owner !== `wallet:${a.wallet}`)
+      throw new Error("Sign in with the creator wallet before saving");
     new PublicKey(a.wallet);
     const id = randomUUID();
     await db().query(
-      "INSERT INTO agents(id,owner,wallet,name,description,strategy,category,hourly_lamports,listed,plan) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)",
+      "INSERT INTO agents(id,owner,wallet,name,description,strategy,category,hourly_lamports,listed,plan,avatar,avatar_color,hourly_agent) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)",
       [
         id,
         owner,
@@ -55,6 +59,9 @@ export async function POST(r: Request) {
         Math.round(a.hourlySol * 1e9),
         a.listed,
         plan ? JSON.stringify(plan) : null,
+        a.avatar,
+        a.avatarColor,
+        a.hourlyAgent,
       ],
     );
     return Response.json({ id });
@@ -75,7 +82,9 @@ export async function PATCH(r: Request) {
           owner,
         ])
       ).rows[0];
-      if (a?.plan) {
+      if (!a?.plan)
+        throw new Error("Save a complete agent blueprint before publishing");
+      if (a.plan) {
         const n = (
           await db().query(
             "SELECT count(*)::int AS n FROM paper_runs WHERE agent_id=$1 AND owner=$2",

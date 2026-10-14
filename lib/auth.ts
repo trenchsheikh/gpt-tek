@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import nacl from "tweetnacl";
-import bs58 from "bs58";
+import { verifyWalletSignature } from "./wallet-signature";
 import { db } from "./db";
 import { PublicKey } from "@solana/web3.js";
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -23,10 +22,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           );
           if (!result.rows[0]) return null;
           if (
-            !nacl.sign.detached.verify(
-              new TextEncoder().encode(result.rows[0].message),
-              bs58.decode(String(c.signature)),
-              bs58.decode(address),
+            !verifyWalletSignature(
+              address,
+              String(c.signature),
+              result.rows[0].message,
             )
           )
             return null;

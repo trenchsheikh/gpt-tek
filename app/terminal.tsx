@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
+import AgentAvatar, { avatarNames } from "./agent-avatar";
 import {
   Plus,
   ArrowUpRight,
@@ -38,6 +39,11 @@ type Agent = {
   models?: Plan["models"];
   listed?: boolean;
   paper_samples?: number;
+  demo?: boolean;
+  avatar?: number;
+  avatar_color?: string;
+  hourly_agent?: string | number;
+  risk?: { maxTradeUsd?: number; slippageBps?: number; stopLossPct?: number };
   wallet: string;
 };
 type Rental = {
@@ -73,13 +79,19 @@ type Provider = {
   signTransaction: (t: VersionedTransaction) => Promise<VersionedTransaction>;
   signAndSendTransaction: (t: Transaction) => Promise<{ signature: string }>;
 };
+let chosenWallet: "Phantom" | "Solflare" = "Phantom";
 function walletProvider() {
   const w = window as unknown as {
     phantom?: { solana: Provider };
     solana?: Provider;
+    solflare?: Provider;
   };
-  const p = w.phantom?.solana || w.solana;
-  if (!p) throw new Error("Install Phantom to connect a Solana wallet.");
+  const p =
+    chosenWallet === "Solflare" ? w.solflare : w.phantom?.solana || w.solana;
+  if (!p)
+    throw new Error(
+      "Open this site in your wallet browser, or install the selected wallet extension.",
+    );
   return p;
 }
 async function api(path: string, body?: unknown, method = "POST") {
@@ -129,6 +141,7 @@ export default function Terminal() {
   } | null>(null);
   const [catalogue, setCatalogue] = useState<Model[]>([]);
   const [status, setStatus] = useState({
+    tokenPayments: false,
     database: false,
     inference: false,
     trading: false,
@@ -144,13 +157,18 @@ export default function Terminal() {
   const [architect, setArchitect] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [wallet, setWallet] = useState("");
-  const [price, setPrice] = useState(0.01);
+  const [price, setPrice] = useState(10);
+  const [avatar, setAvatar] = useState(0);
+  const [avatarColor, setAvatarColor] = useState("#bba7f5");
+  const [configTab, setConfigTab] = useState("Identity");
   const [hours, setHours] = useState(4);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [modal, setModal] = useState<"models" | "login" | "rent" | null>(null);
+  const [modal, setModal] = useState<
+    "models" | "login" | "rent" | "wallet" | null
+  >(null);
   const [pickStage, setPickStage] = useState<string>("architect");
   const [modelSearch, setModelSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -368,7 +386,9 @@ export default function Terminal() {
         description: plan.description,
         strategy: plan.strategy,
         category: plan.category,
-        hourlySol: price,
+        hourlyAgent: price,
+        avatar,
+        avatarColor,
         wallet: address,
         listed: false,
         plan: validated,
@@ -378,7 +398,10 @@ export default function Terminal() {
         ...plan,
         plan: validated,
         wallet: address,
-        hourly_lamports: String(Math.round(price * 1e9)),
+        hourly_lamports: "0",
+        hourly_agent: price,
+        avatar,
+        avatar_color: avatarColor,
       };
       setSelected(a);
       setView("Test & trade");
@@ -463,14 +486,7 @@ export default function Terminal() {
                 ? "Mainnet rentals"
                 : "Devnet rentals"}
             </span>
-            <button
-              className="at-outline"
-              onClick={() =>
-                action(async () => {
-                  await connect();
-                })
-              }
-            >
+            <button className="at-outline" onClick={() => setModal("wallet")}>
               <Wallet size={15} />
               {wallet
                 ? wallet.slice(0, 4) + "…" + wallet.slice(-4)
@@ -583,104 +599,205 @@ export default function Terminal() {
                 <span className="at-pill">Draft</span>
               </div>
 
-              <label>
-                Agent name
-                <input
-                  value={plan.name}
-                  placeholder="Name your intelligence"
-                  maxLength={60}
-                  onChange={(e) => setPlan({ ...plan, name: e.target.value })}
-                />
-              </label>
-              <label>
-                Short description
-                <input
-                  value={plan.description}
-                  placeholder="What is its edge?"
-                  maxLength={300}
-                  onChange={(e) =>
-                    setPlan({ ...plan, description: e.target.value })
-                  }
-                />
-              </label>
-              <div className="at-roles">
-                {stages.map((s, i) => (
-                  <button key={s} onClick={() => picker(s)}>
-                    <span className="at-role-number">0{i + 1}</span>
-                    <div>
-                      <strong>
-                        {s === "execution"
-                          ? "Execution planning"
-                          : s[0].toUpperCase() + s.slice(1)}
-                      </strong>
-                      <small>{modelName(plan.models[s])}</small>
-                    </div>
-                    <ProviderIcon provider={plan.models[s].split("/")[0]} />
-                    <ChevronDown size={12} />
+              <div className="ar-config-tabs">
+                {["Identity", "Models", "Strategy"].map((t) => (
+                  <button
+                    key={t}
+                    aria-pressed={configTab === t}
+                    className={configTab === t ? "active" : ""}
+                    onClick={() => setConfigTab(t)}
+                  >
+                    {t}
                   </button>
                 ))}
               </div>
-              <label>
-                Trading rules
-                <textarea
-                  rows={4}
-                  maxLength={8000}
-                  placeholder="Entry rules, exits, evidence requirements…"
-                  value={plan.strategy}
-                  onChange={(e) =>
-                    setPlan({ ...plan, strategy: e.target.value })
-                  }
-                />
-              </label>
-              <div className="at-form-pair">
-                <label>
-                  Max trade (USD)
-                  <input
-                    type="number"
-                    min={1}
-                    max={10000}
-                    value={plan.maxTradeUsd}
-                    onChange={(e) =>
-                      setPlan({ ...plan, maxTradeUsd: Number(e.target.value) })
-                    }
-                  />
-                </label>
-                <label>
-                  Paper loss limit (%)
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={plan.stopLossPct}
-                    onChange={(e) =>
-                      setPlan({ ...plan, stopLossPct: Number(e.target.value) })
-                    }
-                  />
-                </label>
-              </div>
-              <div className="at-form-pair">
-                <label>
-                  Slippage (bps)
-                  <input
-                    type="number"
-                    min={10}
-                    max={100}
-                    value={plan.slippageBps}
-                    onChange={(e) =>
-                      setPlan({ ...plan, slippageBps: Number(e.target.value) })
-                    }
-                  />
-                </label>
-                <label>
-                  Rental SOL / hour
-                  <input
-                    type="number"
-                    min={0.000001}
-                    step={0.001}
-                    value={price}
-                    onChange={(e) => setPrice(Number(e.target.value))}
-                  />
-                </label>
+              <div className="ar-config-body">
+                {configTab === "Identity" && (
+                  <>
+                    <div className="ar-avatar-preview">
+                      <AgentAvatar variant={avatar} color={avatarColor} />
+                      <span>
+                        {plan.name || "Your agent"}
+                        <small>Make it yours</small>
+                      </span>
+                    </div>
+                    <div className="ar-avatar-picker">
+                      {avatarNames.map((n, i) => (
+                        <button
+                          key={n}
+                          aria-label={n}
+                          aria-pressed={avatar === i}
+                          className={avatar === i ? "active" : ""}
+                          onClick={() => setAvatar(i)}
+                        >
+                          <AgentAvatar variant={i} color={avatarColor} />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="ar-color-picker">
+                      {[
+                        "#bba7f5",
+                        "#d9fc91",
+                        "#9ddde9",
+                        "#f4d59f",
+                        "#efa9c2",
+                        "#b3c8f5",
+                      ].map((c) => (
+                        <button
+                          key={c}
+                          aria-label={`Colour ${c}`}
+                          aria-pressed={avatarColor === c}
+                          style={{ background: c }}
+                          onClick={() => setAvatarColor(c)}
+                        />
+                      ))}
+                      <input
+                        type="color"
+                        aria-label="Custom avatar colour"
+                        value={avatarColor}
+                        onChange={(e) => setAvatarColor(e.target.value)}
+                      />
+                    </div>
+                    <label>
+                      Agent name
+                      <input
+                        value={plan.name}
+                        placeholder="Name your intelligence"
+                        maxLength={60}
+                        onChange={(e) =>
+                          setPlan({ ...plan, name: e.target.value })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Short description
+                      <input
+                        value={plan.description}
+                        placeholder="What is its edge?"
+                        maxLength={300}
+                        onChange={(e) =>
+                          setPlan({ ...plan, description: e.target.value })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Category
+                      <select
+                        value={plan.category}
+                        onChange={(e) =>
+                          setPlan({
+                            ...plan,
+                            category: e.target.value as Plan["category"],
+                          })
+                        }
+                      >
+                        {[
+                          "Research",
+                          "Momentum",
+                          "DeFi",
+                          "Risk management",
+                        ].map((c) => (
+                          <option key={c}>{c}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Rental $AGENT / hour
+                      <input
+                        type="number"
+                        min={0.000001}
+                        max={1000000}
+                        step={1}
+                        value={price}
+                        onChange={(e) => setPrice(Number(e.target.value))}
+                      />
+                    </label>
+                  </>
+                )}
+                {configTab === "Models" && (
+                  <div className="at-roles">
+                    {stages.map((s, i) => (
+                      <button key={s} onClick={() => picker(s)}>
+                        <span className="at-role-number">0{i + 1}</span>
+                        <div>
+                          <strong>
+                            {s === "execution"
+                              ? "Execution planning"
+                              : s[0].toUpperCase() + s.slice(1)}
+                          </strong>
+                          <small>{modelName(plan.models[s])}</small>
+                        </div>
+                        <ProviderIcon provider={plan.models[s].split("/")[0]} />
+                        <ChevronDown size={12} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {configTab === "Strategy" && (
+                  <>
+                    <label>
+                      Trading rules
+                      <textarea
+                        rows={4}
+                        maxLength={8000}
+                        placeholder="Entry rules, exits, evidence requirements…"
+                        value={plan.strategy}
+                        onChange={(e) =>
+                          setPlan({ ...plan, strategy: e.target.value })
+                        }
+                      />
+                    </label>
+                    <div className="at-form-pair">
+                      <label>
+                        Max trade (USD)
+                        <input
+                          type="number"
+                          min={1}
+                          max={10000}
+                          value={plan.maxTradeUsd}
+                          onChange={(e) =>
+                            setPlan({
+                              ...plan,
+                              maxTradeUsd: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                      <label>
+                        Paper loss limit (%)
+                        <input
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={plan.stopLossPct}
+                          onChange={(e) =>
+                            setPlan({
+                              ...plan,
+                              stopLossPct: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                    <div className="at-form-pair">
+                      <label>
+                        Slippage (bps)
+                        <input
+                          type="number"
+                          min={10}
+                          max={100}
+                          value={plan.slippageBps}
+                          onChange={(e) =>
+                            setPlan({
+                              ...plan,
+                              slippageBps: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+                  </>
+                )}
               </div>
               <button
                 className="av-button at-full"
@@ -796,7 +913,11 @@ export default function Terminal() {
                     <article className="at-agent-card" key={a.id}>
                       <div className="at-card-top">
                         <span className="at-agent-symbol">
-                          {a.name.slice(0, 2).toUpperCase()}
+                          <AgentAvatar
+                            variant={a.avatar}
+                            color={a.avatar_color}
+                            label={`${a.name} avatar`}
+                          />
                         </span>
                         <span className="at-pill">{a.category}</span>
                       </div>
@@ -835,7 +956,7 @@ export default function Terminal() {
                               : "Private draft"}
                         </span>
                         <span>
-                          <strong>{Number(a.hourly_lamports) / 1e9} SOL</strong>{" "}
+                          <strong>{Number(a.hourly_agent || 0)} $AGENT</strong>{" "}
                           / hr
                         </span>
                       </div>
@@ -848,7 +969,9 @@ export default function Terminal() {
                         }
                       >
                         {view === "Marketplace"
-                          ? "Rent agent"
+                          ? a.demo
+                            ? "Preview agent"
+                            : "Rent agent"
                           : "Test & manage"}
                         <ArrowUpRight size={15} />
                       </button>
@@ -1158,24 +1281,44 @@ export default function Terminal() {
                   models; narrow your search for more.
                 </small>
               </>
-            ) : modal === "login" ? (
+            ) : modal === "login" || modal === "wallet" ? (
               <>
                 <img className="at-login-logo" src="/avelis-logo.png" alt="" />
-                <h2 id="at-dialog-title">Your intelligence starts here.</h2>
+                <h2 id="at-dialog-title">
+                  {modal === "wallet"
+                    ? "Connect your wallet"
+                    : "Sign in with your wallet"}
+                </h2>
                 <p>
-                  Sign a one-time message to create your AgentRouter session. No
-                  payment or trade is requested.
+                  {modal === "wallet"
+                    ? "Choose a wallet to connect. Your funds stay in your wallet."
+                    : "Sign a one-time message to create your AgentRouter session. No payment or trade is requested."}
                 </p>
-                <button
-                  className="av-button at-full"
-                  disabled={busy || !status.database}
-                  onClick={login}
-                >
-                  <Wallet size={17} />
-                  {busy
-                    ? "Waiting for your signature…"
-                    : "Continue with Solana"}
-                </button>
+                <div className="ar-wallet-choices">
+                  {["Phantom", "Solflare"].map((n) => (
+                    <button
+                      key={n}
+                      className="at-outline"
+                      disabled={busy || (modal === "login" && !status.database)}
+                      onClick={() => {
+                        chosenWallet = n as "Phantom" | "Solflare";
+                        if (modal === "wallet")
+                          action(async () => {
+                            await connect();
+                            setModal(null);
+                          });
+                        else login();
+                      }}
+                    >
+                      <Wallet size={18} />
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <p className="at-footnote">
+                  On mobile, open AgentRouter inside the Phantom or Solflare app
+                  browser.
+                </p>
                 {!status.database && (
                   <small className="at-footnote">
                     Wallet sign-in is waiting for the marketplace database
@@ -1187,7 +1330,13 @@ export default function Terminal() {
             ) : (
               selected && (
                 <>
-                  <span className="av-eyebrow">RENT INTELLIGENCE</span>
+                  <AgentAvatar
+                    variant={selected.avatar}
+                    color={selected.avatar_color}
+                  />
+                  <span className="av-eyebrow">
+                    {selected.demo ? "DEMO AGENT PREVIEW" : "RENT INTELLIGENCE"}
+                  </span>
                   <h2 id="at-dialog-title">{selected.name}</h2>
                   <p>{selected.description}</p>
                   <label>
@@ -1204,21 +1353,27 @@ export default function Terminal() {
                     <span>Total rental fee</span>
                     <strong>
                       {(
-                        (Number(selected.hourly_lamports) * hours) /
-                        1e9
-                      ).toFixed(6)}{" "}
-                      SOL
+                        Number(selected.hourly_agent || 0) * hours
+                      ).toLocaleString()}{" "}
+                      $AGENT
                     </strong>
                   </div>
                   <p className="at-footnote">
-                    Paid directly to the creator on {status.network}. Trading
-                    funds stay separate in your wallet. Live swaps use real
-                    mainnet assets and require your approval. Access starts
-                    after payment verification.
+                    Paid in $AGENT directly to the creator on {status.network}.
+                    SOL covers network fees. Trading funds stay separate in your
+                    wallet. Live swaps use real mainnet assets and require your
+                    approval. Access starts after payment verification.
                   </p>
+                  {(!status.tokenPayments || selected.demo) && (
+                    <p className="ar-demo-label">
+                      {selected.demo
+                        ? "This is an illustrative demo. No trades or payments are available."
+                        : "$AGENT rentals open after token launch."}
+                    </p>
+                  )}
                   <button
                     className="av-button at-full"
-                    disabled={busy}
+                    disabled={busy || selected.demo || !status.tokenPayments}
                     onClick={() =>
                       !session
                         ? setModal("login")

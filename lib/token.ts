@@ -18,6 +18,7 @@ import {
   getInitializeMint2Instruction,
   getCreateAssociatedTokenInstruction,
   getMintToInstruction,
+  getTransferCheckedInstruction,
   getSetAuthorityInstruction,
   AuthorityType,
 } from "@solana-program/token";
@@ -121,4 +122,24 @@ export async function getMint(c: Connection, mint: PublicKey) {
       ? data.freezeAuthority.value
       : null,
   };
+}
+
+export function createTransferCheckedInstruction(
+  source: PublicKey,
+  mint: PublicKey,
+  destination: PublicKey,
+  owner: PublicKey,
+  amount: bigint,
+  decimals: number,
+) {
+  return web3Instruction(
+    getTransferCheckedInstruction({
+      source: address(source.toBase58()),
+      mint: address(mint.toBase58()),
+      destination: address(destination.toBase58()),
+      authority: createNoopSigner(address(owner.toBase58())),
+      amount,
+      decimals,
+    }),
+  );
 }
