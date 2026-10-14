@@ -1,14 +1,18 @@
 import { auth } from "./auth";
+import { publicError } from "./public-error";
 export async function user() {
   const s = await auth();
   if (!s?.user?.id) throw new Error("Sign in to continue.");
   return s.user.id;
 }
 export function fail(e: unknown) {
-  const message = e instanceof Error ? e.message : "Request failed";
+  const message = publicError(e);
   return Response.json(
     { error: message },
-    { status: message.includes("Sign in") ? 401 : 400 },
+    {
+      status: message.includes("Sign in") ? 401 : 400,
+      headers: { "Cache-Control": "no-store" },
+    },
   );
 }
 export function sameOrigin(r: Request) {
