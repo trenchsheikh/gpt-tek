@@ -5,6 +5,8 @@ import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
 import { ChatText, Thinking } from "./chat-text";
+import IntegrationPicker from "./integration-picker";
+import { supportsSwaps } from "@/lib/integrations";
 import AgentAvatar, { avatarNames } from "./agent-avatar";
 import {
   Plus,
@@ -68,6 +70,7 @@ type Run = {
   sol: number;
   created_at: string;
   report: {
+    mode?: "research";
     research: string;
     reasoning: string;
     decision: string;
@@ -227,12 +230,6 @@ export default function Terminal() {
           m.find((x) => x.provider === "anthropic" && !x.id.includes(":")) ||
           m[0];
         if (preferred) setArchitect(preferred.id);
-        setPlan((p) => ({
-          ...p,
-          models: Object.fromEntries(
-            stages.map((s) => [s, p.models[s] || preferred?.id || ""]),
-          ) as Plan["models"],
-        }));
       })
       .catch((e) => setNotice(e.message));
     // A visit starts a new conversation; previous chats remain in the sidebar.
@@ -646,7 +643,12 @@ export default function Terminal() {
               </div>
               <div className="at-messages">
                 {!messages.length ? (
-                  <div className="at-chat-welcome">
+                  <div
+                    className={
+                      "at-chat-welcome " +
+                      (pendingMessage ? "ar-welcome-leaving" : "")
+                    }
+                  >
                     <img src="/avelis-logo.png" alt="" />
                     <h2>What should your agent do?</h2>
                     <p>
@@ -655,14 +657,38 @@ export default function Terminal() {
                       every pick.
                     </p>
                     <div className="at-starters">
-                      {markets.map((t) => (
+                      {[
+                        [
+                          "Scout pump.fun bonding-curve setups",
+                          "Build a memecoin research agent for pump.fun bonding-curve setups. Check liquidity, holder risks, momentum and graduation conditions. Ask for missing data rather than guessing.",
+                        ],
+                        [
+                          "Catch fresh Solana pairs",
+                          "Build a memecoin agent to research fresh Solana pairs with liquidity floors, volume checks, rug-risk screening and strict exits.",
+                        ],
+                        [
+                          "Play the perp funding edge",
+                          "Build a perp research agent comparing funding, open interest and liquidation risk with a conservative trade cap.",
+                        ],
+                        [
+                          "Read esports odds, skip the hype",
+                          "Build a prediction-market research agent for CS2 and League of Legends esports. Compare event evidence, odds, roster changes and resolution rules.",
+                        ],
+                        [
+                          "Follow momentum, protect the bag",
+                          "Build a SOL/USDC spot momentum agent with tight risk limits and wallet-approved swaps.",
+                        ],
+                        [
+                          "Find yield worth the risk",
+                          "Build a DeFi research agent comparing yield sustainability, protocol risks and exit liquidity.",
+                        ],
+                      ].map(([label, prompt]) => (
                         <button
-                          key={t}
-                          onClick={() =>
-                            send(`I want to build an agent for ${t}.`)
-                          }
+                          key={label}
+                          disabled={chatBusy}
+                          onClick={() => send(prompt)}
                         >
-                          {t}
+                          {label}
                           <ArrowUpRight size={14} />
                         </button>
                       ))}
@@ -764,7 +790,12 @@ export default function Terminal() {
                 </div>
               </form>
             </section>
-            <section className="at-configuration">
+            <section
+              className={
+                "at-configuration " +
+                (messages.length ? "ar-blueprint-active" : "")
+              }
+            >
               <div className="at-config-title">
                 <span className="av-eyebrow">YOUR AGENT BLUEPRINT</span>
                 <span className="at-pill">
@@ -776,8 +807,52 @@ export default function Terminal() {
                 </span>
               </div>
 
+              <div className="ar-blueprint-stats">
+                <div>
+                  <small>Market</small>
+                  <strong>{plan.market || "Not selected"}</strong>
+                </div>
+                <div>
+                  <small>Models selected</small>
+                  <strong>
+                    {new Set(Object.values(plan.models).filter(Boolean)).size}{" "}
+                    <em>/ 4 roles</em>
+                  </strong>
+                </div>
+                <div>
+                  <small>Trade cap</small>
+                  <strong>${plan.maxTradeUsd}</strong>
+                </div>
+                <div>
+                  <small>Loss limit</small>
+                  <strong>{plan.stopLossPct}%</strong>
+                </div>
+                <div>
+                  <small>Slippage cap</small>
+                  <strong>{(plan.slippageBps / 100).toFixed(2)}%</strong>
+                </div>
+                <div title="Estimate assumes 2,000 input and 400 output tokens per role. Excludes execution fees.">
+                  <small>AI / cycle estimate</small>
+                  <strong>
+                    {Object.values(plan.models).every(Boolean)
+                      ? "$" +
+                        Object.values(plan.models)
+                          .reduce((n, id) => {
+                            const m = catalogue.find((x) => x.id === id);
+                            return (
+                              n +
+                              (m
+                                ? m.inputPrice * 0.002 + m.outputPrice * 0.0004
+                                : 0)
+                            );
+                          }, 0)
+                          .toFixed(3)
+                      : "—"}
+                  </strong>
+                </div>
+              </div>
               <div className="ar-config-tabs">
-                {["Identity", "Models", "Strategy"].map((t) => (
+                {["Identity", "Models", "Strategy", "Integration"].map((t) => (
                   <button
                     key={t}
                     aria-pressed={configTab === t}
@@ -789,6 +864,17 @@ export default function Terminal() {
                 ))}
               </div>
               <div className="ar-config-body">
+                {configTab === "Integration" && (
+                  <IntegrationPicker
+                    market={plan.market}
+                    integration={plan.integration}
+                    target={plan.target}
+                    disabled={chatBusy || historyBusy}
+                    onChange={(integration, target) =>
+                      setPlan({ ...plan, integration, target })
+                    }
+                  />
+                )}
                 {configTab === "Identity" && (
                   <>
                     <div className="ar-avatar-preview">
@@ -1453,7 +1539,13 @@ export default function Terminal() {
                   TEST THE THINKING. REVIEW THE TRADE.
                 </span>
                 <h1>{selected.name}</h1>
-                <p>SOL / USDC · Four model roles · Wallet-approved execution</p>
+                <p>
+                  {selected.plan?.market || "SOL / USDC spot"} · Four model
+                  roles ·{" "}
+                  {supportsSwaps(selected.plan || {})
+                    ? "Wallet-approved swaps"
+                    : "Live market research"}
+                </p>
               </div>
               <button
                 className="at-outline"
@@ -1462,52 +1554,133 @@ export default function Terminal() {
                 <ArrowLeft size={15} /> My agents
               </button>
             </div>
+            <section className="at-panel">
+              <IntegrationPicker
+                market={
+                  selected.plan?.market ||
+                  (selected.category === "Trenches"
+                    ? "Memecoin trading"
+                    : selected.category === "Prediction markets"
+                      ? "Prediction markets"
+                      : "Spot trading")
+                }
+                integration={selected.plan?.integration}
+                target={selected.plan?.target}
+                disabled={busy}
+                onChange={(integration, target) => {
+                  const updated = {
+                    ...selected.plan,
+                    integration,
+                    target,
+                  } as Plan;
+                  setSelected({ ...selected, plan: updated });
+                  setNotice(
+                    "Save integration preferences before running this agent.",
+                  );
+                }}
+              />
+              <button
+                className="at-outline"
+                disabled={busy}
+                onClick={() =>
+                  action(async () => {
+                    const r = await api(
+                      "/api/agents",
+                      {
+                        id: selected.id,
+                        integration:
+                          selected.plan?.integration || "Solana swaps",
+                        target: selected.plan?.target || "SOL",
+                      },
+                      "PATCH",
+                    );
+                    setSelected({ ...selected, plan: r.plan });
+                    setNotice("Integration preferences saved.");
+                  })
+                }
+              >
+                Save integration
+              </button>
+            </section>
             <div className="at-test-layout">
               <section className="at-test-main">
                 <div className="at-panel">
                   <div className="at-panel-heading">
                     <div>
-                      <span className="av-eyebrow">FORWARD PAPER TEST</span>
+                      <span className="av-eyebrow">
+                        {supportsSwaps(selected.plan || {})
+                          ? "FORWARD PAPER TEST"
+                          : "LIVE RESEARCH"}
+                      </span>
                       <h2>Evidence before execution.</h2>
                     </div>
                     <FlaskConical size={23} />
                   </div>
                   <p>
-                    Start with $10,000 simulated cash. Each test uses a fresh
-                    SOL spot price, records the model decision, and applies a 10
-                    bps simulated fee. These are forward observations, not
-                    historical backtests.
+                    {supportsSwaps(selected.plan || {})
+                      ? "Start with $10,000 simulated cash. Tests use a fresh SOL spot price and a 10 bps simulated fee. These are forward observations, not historical backtests."
+                      : "Run the selected models against fresh public market evidence. Research observations do not simulate trades, produce returns or count as forward trading tests."}
                   </p>
+                  {!status.inference && !apiKey && (
+                    <p className="ar-chat-notice">
+                      Add your model access key in Settings to run the selected
+                      research models.{" "}
+                      <button
+                        className="at-outline"
+                        onClick={() => setView("Settings")}
+                      >
+                        Settings
+                      </button>
+                    </p>
+                  )}
                   <div className="at-metrics">
                     <div>
-                      <small>Paper equity</small>
+                      <small>
+                        {supportsSwaps(selected.plan || {})
+                          ? "Paper equity"
+                          : "Research only"}
+                      </small>
                       <strong>
-                        $
-                        {Number(runs[0]?.equity ?? 10000).toLocaleString(
-                          undefined,
-                          { maximumFractionDigits: 2 },
-                        )}
+                        {supportsSwaps(selected.plan || {})
+                          ? "$" +
+                            Number(
+                              runs.find((r) => r.report.mode !== "research")
+                                ?.equity ?? 10000,
+                            ).toLocaleString(undefined, {
+                              maximumFractionDigits: 2,
+                            })
+                          : "Read-only"}
                       </strong>
                     </div>
                     <div>
-                      <small>Recorded samples</small>
+                      <small>Research / test observations</small>
                       <strong>{runs.length}</strong>
                     </div>
                     <div>
-                      <small>Simulated return</small>
+                      <small>
+                        {supportsSwaps(selected.plan || {})
+                          ? "Simulated return"
+                          : "No trades executed"}
+                      </small>
                       <strong>
-                        {(
-                          (Number(runs[0]?.equity ?? 10000) / 10000 - 1) *
-                          100
-                        ).toFixed(2)}
-                        %
+                        {supportsSwaps(selected.plan || {})
+                          ? (
+                              (Number(
+                                runs.find((r) => r.report.mode !== "research")
+                                  ?.equity ?? 10000,
+                              ) /
+                                10000 -
+                                1) *
+                              100
+                            ).toFixed(2) + "%"
+                          : "—"}
                       </strong>
                     </div>
                   </div>
                   <div className="at-actions">
                     <button
                       className="av-button"
-                      disabled={busy}
+                      disabled={busy || (!status.inference && !apiKey)}
                       onClick={() =>
                         action(async () => {
                           await api("/api/paper", {
@@ -1525,12 +1698,18 @@ export default function Terminal() {
                       ) : (
                         <FlaskConical size={16} />
                       )}{" "}
-                      Run a forward test
+                      {supportsSwaps(selected.plan || {})
+                        ? "Run a forward test"
+                        : "Run research"}
                     </button>
                     {selected.plan && (
                       <button
                         className="at-outline"
-                        disabled={busy || runs.length < 5}
+                        disabled={
+                          busy ||
+                          runs.filter((r) => r.report.mode !== "research")
+                            .length < 5
+                        }
                         onClick={() =>
                           action(async () => {
                             await api(
@@ -1575,7 +1754,7 @@ export default function Terminal() {
                   )}
                 </div>
                 <div className="at-panel">
-                  <h2>Recorded paper activity</h2>
+                  <h2>Recorded research and tests</h2>
                   {!runs.length ? (
                     <p>Your first forward sample will appear here.</p>
                   ) : (
@@ -1585,7 +1764,7 @@ export default function Terminal() {
                           <tr>
                             <th>Time</th>
                             <th>Decision</th>
-                            <th>SOL price</th>
+                            <th>Reference price</th>
                             <th>Trade size</th>
                             <th>Equity</th>
                           </tr>
@@ -1623,7 +1802,9 @@ export default function Terminal() {
                   Your final say.
                 </h2>
                 <p>
-                  Ask your agent to analyse your SOL and USDC balances. Review
+                  {supportsSwaps(selected.plan || {})
+                    ? "Ask your agent to analyse your SOL and USDC balances. Review"
+                    : "This integration is connected for market research. Direct order signing is unavailable. Use the research panel above. Review"}
                   its recommendation, get a live quote, then sign in your wallet
                   to execute.
                 </p>
@@ -1640,7 +1821,7 @@ export default function Terminal() {
                 </div>
                 <button
                   className="at-outline at-full"
-                  disabled={busy}
+                  disabled={busy || !supportsSwaps(selected.plan || {})}
                   onClick={() =>
                     action(async () => {
                       const address = wallet || (await connect());

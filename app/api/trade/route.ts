@@ -1,3 +1,4 @@
+import { supportsSwaps } from "@/lib/integrations";
 import { randomUUID } from "crypto";
 import { VersionedTransaction } from "@solana/web3.js";
 import nacl from "tweetnacl";
@@ -108,12 +109,9 @@ export async function POST(r: Request) {
       .parse(b);
     const agent = await agentAccess(input.agentId, uid);
     const plan = planSchema.parse(agent.plan);
-    if (
-      (plan.market && plan.market !== "Spot trading") ||
-      ["Trenches", "Prediction markets"].includes(plan.category)
-    )
+    if (!supportsSwaps(plan))
       throw new Error(
-        "This category requires its trading-platform integration before testing or execution.",
+        "This integration supports research only. Choose Solana swaps with a SOL/USDC spot strategy for wallet-approved execution.",
       );
     if (input.amountUsd > plan.maxTradeUsd)
       throw new Error("Trade exceeds the agent’s maximum size.");

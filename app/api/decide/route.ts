@@ -1,3 +1,5 @@
+import { supportsSwaps } from "@/lib/integrations";
+import { planSchema } from "@/lib/agent-plan";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { agentAccess } from "@/lib/access";
 import { pipeline } from "@/lib/pipeline";
@@ -12,6 +14,10 @@ export async function POST(r: Request) {
     await limit(`decision:${uid}`, 12, 3600);
     const { agentId, wallet, apiKey } = await r.json();
     const a = await agentAccess(agentId, uid);
+    if (!supportsSwaps(planSchema.parse(a.plan)))
+      throw new Error(
+        "Use Run research for this integration. Live decisions require Solana swaps and SOL/USDC spot.",
+      );
     const c = new Connection(
       process.env.MAINNET_RPC_URL || "https://api.mainnet-beta.solana.com",
     );

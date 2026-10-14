@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { integrationNames } from "./integrations";
 import { markets } from "./builder-journey";
 export const stages = [
   "research",
@@ -8,6 +9,8 @@ export const stages = [
 ] as const;
 export const planSchema = z.object({
   market: z.enum(markets).optional(),
+  integration: z.enum(integrationNames).optional(),
+  target: z.string().min(1).max(80).optional(),
   name: z.string().min(3).max(60),
   description: z.string().min(10).max(300),
   strategy: z.string().min(30).max(8000),

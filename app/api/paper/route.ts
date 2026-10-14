@@ -1,3 +1,7 @@
+import { supportsSwaps } from "@/lib/integrations";
+import { integrationData } from "@/lib/integration-data";
+import { research } from "@/lib/research";
+import { planSchema } from "@/lib/agent-plan";
 import { randomUUID } from "crypto";
 import { db } from "@/lib/db";
 import { agentAccess } from "@/lib/access";
@@ -15,7 +19,7 @@ export async function GET(r: Request) {
     return Response.json(
       (
         await db().query(
-          "SELECT * FROM paper_runs WHERE agent_id=$1 AND owner=$2 ORDER BY created_at DESC LIMIT 100",
+          "SELECT * FROM paper_runs WHERE agent_id=$1 AND owner=$2 AND COALESCE(report->>'mode','paper')='paper' ORDER BY created_at DESC LIMIT 100",
           [id, uid],
         )
       ).rows,
@@ -31,9 +35,32 @@ export async function POST(r: Request) {
     await limit(`paper:${uid}`, 12, 3600);
     const { agentId, apiKey } = await r.json();
     const agent = await agentAccess(agentId, uid);
+    const p = planSchema.parse(agent.plan);
+    if (!p.market)
+      p.market =
+        p.category === "Trenches"
+          ? "Memecoin trading"
+          : p.category === "Prediction markets"
+            ? "Prediction markets"
+            : "Spot trading";
+    if (!supportsSwaps(p)) {
+      const snapshot = await integrationData(p);
+      const result = await research({ ...agent, plan: p }, snapshot, apiKey);
+      const id = randomUUID();
+      await db().query(
+        "INSERT INTO paper_runs(id,agent_id,owner,price,action,amount_usd,usd,sol,equity,report) VALUES($1,$2,$3,0,'hold',0,10000,0,10000,$4)",
+        [
+          id,
+          agentId,
+          uid,
+          JSON.stringify({ ...result.reports, snapshot, mode: "research" }),
+        ],
+      );
+      return Response.json({ id, mode: "research", ...result, snapshot });
+    }
     const previous = (
       await db().query(
-        "SELECT * FROM paper_runs WHERE agent_id=$1 AND owner=$2 ORDER BY created_at DESC LIMIT 1",
+        "SELECT * FROM paper_runs WHERE agent_id=$1 AND owner=$2 AND COALESCE(report->>'mode','paper')='paper' ORDER BY created_at DESC LIMIT 1",
         [agentId, uid],
       )
     ).rows[0];
@@ -68,7 +95,7 @@ export async function POST(r: Request) {
         throw new Error("Another test is running. Retry once it finishes.");
       const newest = (
         await client.query(
-          "SELECT id FROM paper_runs WHERE agent_id=$1 AND owner=$2 ORDER BY created_at DESC LIMIT 1",
+          "SELECT id FROM paper_runs WHERE agent_id=$1 AND owner=$2 AND COALESCE(report->>'mode','paper')='paper' ORDER BY created_at DESC LIMIT 1",
           [agentId, uid],
         )
       ).rows[0];

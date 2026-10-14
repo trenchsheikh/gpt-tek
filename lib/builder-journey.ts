@@ -1,3 +1,4 @@
+import { defaultIntegration } from "./integrations";
 export const markets = [
   "Memecoin trading",
   "Perp trading",
@@ -146,6 +147,7 @@ export function nextChoices(
 export function applyPreferences<
   T extends {
     strategy: string;
+    integration?: import("./integrations").Integration;
     maxTradeUsd: number;
     stopLossPct: number;
     slippageBps: number;
@@ -160,7 +162,13 @@ export function applyPreferences<
   const base = plan.strategy.split("\nUser preferences:")[0];
   return {
     ...plan,
-    ...(preferences.market ? { market: preferences.market } : {}),
+    ...(preferences.market
+      ? {
+          market: preferences.market,
+          integration:
+            plan.integration || defaultIntegration(preferences.market),
+        }
+      : {}),
     maxTradeUsd: max || plan.maxTradeUsd,
     stopLossPct:
       risk === "Conservative"

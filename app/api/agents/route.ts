@@ -1,3 +1,5 @@
+import { supportsSwaps, integrationNames } from "@/lib/integrations";
+import { z } from "zod";
 import { planSchema } from "@/lib/agent-plan";
 import { models } from "@/lib/models";
 import { limit } from "@/lib/limit";
@@ -12,11 +14,11 @@ export async function GET(r: Request) {
     const owner = mine ? await user() : null;
     const result = mine
       ? await db().query(
-          "SELECT a.*,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner) AS paper_samples FROM agents a WHERE owner=$1 ORDER BY created_at DESC LIMIT 100",
+          "SELECT a.*,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner AND COALESCE(report->>'mode','paper')='paper') AS paper_samples FROM agents a WHERE owner=$1 ORDER BY created_at DESC LIMIT 100",
           [owner],
         )
       : await db().query(
-          "SELECT a.id,a.wallet,a.name,a.description,a.category,a.hourly_lamports,a.created_at,a.avatar,a.avatar_color,a.hourly_agent,a.plan->'models' AS models,jsonb_build_object('maxTradeUsd',a.plan->'maxTradeUsd','slippageBps',a.plan->'slippageBps','stopLossPct',a.plan->'stopLossPct') AS risk,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner) AS paper_samples FROM agents a WHERE listed=true ORDER BY created_at DESC LIMIT 100",
+          "SELECT a.id,a.wallet,a.name,a.description,a.category,a.hourly_lamports,a.created_at,a.avatar,a.avatar_color,a.hourly_agent,a.plan->'models' AS models,jsonb_build_object('maxTradeUsd',a.plan->'maxTradeUsd','slippageBps',a.plan->'slippageBps','stopLossPct',a.plan->'stopLossPct') AS risk,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner AND COALESCE(report->>'mode','paper')='paper') AS paper_samples FROM agents a WHERE listed=true ORDER BY created_at DESC LIMIT 100",
         );
     return Response.json(result.rows);
   } catch (e) {
@@ -72,21 +74,50 @@ export async function PATCH(r: Request) {
   try {
     sameOrigin(r);
     const owner = await user();
-    const { id, listed } = await r.json();
+    const body = await r.json();
+    const { id, listed } = body;
+    if (body.integration) {
+      const integration = z.enum(integrationNames).parse(body.integration);
+      const target = z
+        .string()
+        .min(1)
+        .max(80)
+        .parse(body.target || "SOL");
+      const a = (
+        await db().query(
+          "SELECT plan,listed FROM agents WHERE id=$1 AND owner=$2",
+          [id, owner],
+        )
+      ).rows[0];
+      if (!a?.plan) throw new Error("Agent not found.");
+      if (a.listed)
+        throw new Error("Unlist the agent before changing its integration.");
+      const plan = planSchema.parse({ ...a.plan, integration, target });
+      await db().query("UPDATE agents SET plan=$1 WHERE id=$2 AND owner=$3", [
+        JSON.stringify(plan),
+        id,
+        owner,
+      ]);
+      return Response.json({ ok: true, plan });
+    }
     if (typeof listed !== "boolean") throw new Error("Invalid listing");
     if (listed) {
       const a = (
-        await db().query("SELECT plan FROM agents WHERE id=$1 AND owner=$2", [
-          id,
-          owner,
-        ])
+        await db().query(
+          "SELECT plan,listed FROM agents WHERE id=$1 AND owner=$2",
+          [id, owner],
+        )
       ).rows[0];
       if (!a?.plan)
         throw new Error("Save a complete agent blueprint before publishing");
+      if (!supportsSwaps(planSchema.parse(a.plan)))
+        throw new Error(
+          "Research-only integrations cannot be listed for live-trading rentals yet.",
+        );
       if (a.plan) {
         const n = (
           await db().query(
-            "SELECT count(*)::int AS n FROM paper_runs WHERE agent_id=$1 AND owner=$2",
+            "SELECT count(*)::int AS n FROM paper_runs WHERE agent_id=$1 AND owner=$2 AND COALESCE(report->>'mode','paper')='paper'",
             [id, owner],
           )
         ).rows[0].n;
