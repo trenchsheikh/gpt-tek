@@ -23,6 +23,8 @@ export default function SimulationTest({
   useEffect(() => () => abort.current?.abort(), []);
   useEffect(() => {
     if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     dialog.current?.querySelector<HTMLButtonElement>("button")?.focus();
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -49,7 +51,10 @@ export default function SimulationTest({
       }
     };
     document.addEventListener("keydown", key);
-    return () => document.removeEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("keydown", key);
+      document.body.style.overflow = previousOverflow;
+    };
   }, [open]);
   async function run() {
     abort.current?.abort();
@@ -147,6 +152,9 @@ export default function SimulationTest({
               A generated scenario, not historical performance. No real funds or
               trades.
             </p>
+            <small className="ar-sim-provenance">
+              Gemini-powered simulation
+            </small>
             {busy && <SimulationOffice key={variant} variant={variant} />}
             {error && (
               <div className="ar-chat-notice" role="alert">
@@ -251,11 +259,6 @@ export default function SimulationTest({
                     {result.market} · {result.rules.approach}
                   </b>
                   <p>{result.rules.explanation}</p>
-                  <small>
-                    Interpreter: {result.engine}. Blueprint models are
-                    configured choices; they were not executed in this synthetic
-                    test.
-                  </small>
                 </div>
                 <details>
                   <summary>Rules, scoring and assumptions</summary>
