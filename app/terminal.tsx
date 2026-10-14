@@ -808,62 +808,26 @@ export default function Terminal() {
                 </span>
               </div>
 
-              <div className="ar-blueprint-stats">
-                <div>
-                  <small>Market</small>
-                  <strong>{plan.market || "Not selected"}</strong>
-                </div>
-                <div>
-                  <small>Models selected</small>
-                  <strong>
-                    {new Set(Object.values(plan.models).filter(Boolean)).size}{" "}
-                    <em>/ 4 roles</em>
-                  </strong>
-                </div>
-                <div>
-                  <small>Trade cap</small>
-                  <strong>${plan.maxTradeUsd}</strong>
-                </div>
-                <div>
-                  <small>Loss limit</small>
-                  <strong>{plan.stopLossPct}%</strong>
-                </div>
-                <div>
-                  <small>Slippage cap</small>
-                  <strong>{(plan.slippageBps / 100).toFixed(2)}%</strong>
-                </div>
-                <div title="Estimate assumes 2,000 input and 400 output tokens per role. Excludes execution fees.">
-                  <small>AI / cycle estimate</small>
-                  <strong>
-                    {Object.values(plan.models).every(Boolean)
-                      ? "$" +
-                        Object.values(plan.models)
-                          .reduce((n, id) => {
-                            const m = catalogue.find((x) => x.id === id);
-                            return (
-                              n +
-                              (m
-                                ? m.inputPrice * 0.002 + m.outputPrice * 0.0004
-                                : 0)
-                            );
-                          }, 0)
-                          .toFixed(3)
-                      : "—"}
-                  </strong>
-                </div>
+              <div className="ar-blueprint-summary">
+                <span>{plan.market || "Choose your market in chat"}</span>
+                <span>
+                  {plan.name
+                    ? `$${plan.maxTradeUsd} max per trade`
+                    : "Your setup takes shape as we chat"}
+                </span>
               </div>
-              <div className="ar-config-tabs">
-                {["Identity", "Models", "Strategy", "Integration"].map((t) => (
-                  <button
-                    key={t}
-                    aria-pressed={configTab === t}
-                    className={configTab === t ? "active" : ""}
-                    onClick={() => setConfigTab(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              <label className="ar-section-select">
+                Configure
+                <select
+                  value={configTab}
+                  onChange={(e) => setConfigTab(e.target.value)}
+                >
+                  <option value="Identity">Agent profile</option>
+                  <option value="Models">AI models</option>
+                  <option value="Strategy">Strategy & risk</option>
+                  <option value="Integration">Platform connection</option>
+                </select>
+              </label>
               <div className="ar-config-body">
                 {configTab === "Integration" && (
                   <IntegrationPicker
@@ -885,43 +849,46 @@ export default function Terminal() {
                         <small>Make it yours</small>
                       </span>
                     </div>
-                    <div className="ar-avatar-picker">
-                      {avatarNames.map((n, i) => (
-                        <button
-                          key={n}
-                          aria-label={n}
-                          aria-pressed={avatar === i}
-                          className={avatar === i ? "active" : ""}
-                          onClick={() => setAvatar(i)}
-                        >
-                          <AgentAvatar variant={i} color={avatarColor} />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="ar-color-picker">
-                      {[
-                        "#bba7f5",
-                        "#d9fc91",
-                        "#9ddde9",
-                        "#f4d59f",
-                        "#efa9c2",
-                        "#b3c8f5",
-                      ].map((c) => (
-                        <button
-                          key={c}
-                          aria-label={`Colour ${c}`}
-                          aria-pressed={avatarColor === c}
-                          style={{ background: c }}
-                          onClick={() => setAvatarColor(c)}
+                    <details className="ar-appearance">
+                      <summary>Customize appearance</summary>
+                      <div className="ar-avatar-picker">
+                        {avatarNames.map((n, i) => (
+                          <button
+                            key={n}
+                            aria-label={n}
+                            aria-pressed={avatar === i}
+                            className={avatar === i ? "active" : ""}
+                            onClick={() => setAvatar(i)}
+                          >
+                            <AgentAvatar variant={i} color={avatarColor} />
+                          </button>
+                        ))}
+                      </div>
+                      <div className="ar-color-picker">
+                        {[
+                          "#bba7f5",
+                          "#d9fc91",
+                          "#9ddde9",
+                          "#f4d59f",
+                          "#efa9c2",
+                          "#b3c8f5",
+                        ].map((c) => (
+                          <button
+                            key={c}
+                            aria-label={`Colour ${c}`}
+                            aria-pressed={avatarColor === c}
+                            style={{ background: c }}
+                            onClick={() => setAvatarColor(c)}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          aria-label="Custom avatar colour"
+                          value={avatarColor}
+                          onChange={(e) => setAvatarColor(e.target.value)}
                         />
-                      ))}
-                      <input
-                        type="color"
-                        aria-label="Custom avatar colour"
-                        value={avatarColor}
-                        onChange={(e) => setAvatarColor(e.target.value)}
-                      />
-                    </div>
+                      </div>
+                    </details>
                     <label>
                       Agent name
                       <input
@@ -982,6 +949,10 @@ export default function Terminal() {
                 )}
                 {configTab === "Models" && (
                   <div className="at-roles">
+                    <p className="ar-model-overview">
+                      {new Set(Object.values(plan.models).filter(Boolean)).size}{" "}
+                      models across 4 roles. Select a role to change its model.
+                    </p>
                     {stages.map((s, i) => (
                       <button key={s} onClick={() => picker(s)}>
                         <span className="at-role-number">0{i + 1}</span>
