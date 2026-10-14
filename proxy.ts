@@ -16,6 +16,10 @@ export function proxy(request: NextRequest) {
     /\.[a-z0-9]+$/i.test(path)
   )
     return NextResponse.next();
+  if (host === "www.agentrouter.trade") {
+    url.hostname = "agentrouter.trade";
+    return NextResponse.redirect(url, 307);
+  }
   if (isDocs) {
     if (path === "/app")
       return NextResponse.redirect(new URL(appUrl + url.search), 307);

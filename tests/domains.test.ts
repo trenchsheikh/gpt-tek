@@ -22,16 +22,16 @@ test("subdomain routes preserve queries and avoid redirect loops", () => {
     "https://docs.agentrouter.trade/quickstart",
   );
   assert.equal(
-    route("https://www.agentrouter.trade/app?view=build").headers.get(
-      "location",
-    ),
+    route("https://agentrouter.trade/app?view=build").headers.get("location"),
     "https://app.agentrouter.trade/?view=build",
   );
   assert.equal(
-    route("https://www.agentrouter.trade/docs/quickstart").headers.get(
-      "location",
-    ),
+    route("https://agentrouter.trade/docs/quickstart").headers.get("location"),
     "https://docs.agentrouter.trade/quickstart",
+  );
+  assert.equal(
+    route("https://www.agentrouter.trade/").headers.get("location"),
+    "https://agentrouter.trade/",
   );
   for (const url of [
     "https://app.agentrouter.trade/api/auth/session",

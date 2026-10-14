@@ -30,7 +30,7 @@ npm run dev
 Production variables:
 
 - `AUTH_SECRET`: cryptographically random session secret, server only.
-- `AUTH_URL`: leave empty to infer the request origin for wallet authentication across deployment hosts. Public website: https://www.agentrouter.trade; app: https://app.agentrouter.trade; docs: https://docs.agentrouter.trade.
+- `AUTH_URL`: leave empty to infer the request origin for wallet authentication across deployment hosts. Public website: https://agentrouter.trade; app: https://app.agentrouter.trade; docs: https://docs.agentrouter.trade.
 - `DATABASE_URL`: dedicated PostgreSQL connection. Run the schema before serving authenticated requests. Do not use another project's database.
 - `OPENROUTER_API_KEY`: server-only OpenRouter credential with available credits. Alternatively each user can enter their own key into the app's Settings; it is held only in page memory and sent when making an AI request. Backend routing uses OpenRouter; the customer interface presents individual models rather than infrastructure branding.
 - `JUPITER_API_KEY`: server-only key provisioned through https://portal.jup.ag for Swap V2.
