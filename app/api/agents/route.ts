@@ -11,10 +11,11 @@ export async function GET(r: Request) {
   try {
     const mine = new URL(r.url).searchParams.has("mine");
     if (!mine && !process.env.DATABASE_URL) return Response.json(demoAgents);
+    const owner = mine ? await user() : null;
     const result = mine
       ? await db().query(
           "SELECT * FROM agents WHERE owner=$1 ORDER BY created_at DESC LIMIT 100",
-          [await user()],
+          [owner],
         )
       : await db().query(
           "SELECT a.id,a.wallet,a.name,a.description,a.category,a.hourly_lamports,a.created_at,a.avatar,a.avatar_color,a.hourly_agent,a.plan->'models' AS models,jsonb_build_object('maxTradeUsd',a.plan->'maxTradeUsd','slippageBps',a.plan->'slippageBps','stopLossPct',a.plan->'stopLossPct') AS risk,(SELECT count(*)::int FROM paper_runs WHERE agent_id=a.id AND owner=a.owner) AS paper_samples FROM agents a WHERE listed=true ORDER BY created_at DESC LIMIT 100",

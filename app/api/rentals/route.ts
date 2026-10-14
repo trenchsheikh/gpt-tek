@@ -23,11 +23,12 @@ const rpc = () =>
   );
 export async function GET() {
   try {
+    const renter = await user();
     return Response.json(
       (
         await db().query(
           "SELECT r.*,a.name,a.description FROM rentals r JOIN agents a ON a.id=r.agent_id WHERE renter=$1 ORDER BY created_at DESC",
-          [await user()],
+          [renter],
         )
       ).rows,
     );
