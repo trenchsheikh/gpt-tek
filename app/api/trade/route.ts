@@ -108,6 +108,10 @@ export async function POST(r: Request) {
       .parse(b);
     const agent = await agentAccess(input.agentId, uid);
     const plan = planSchema.parse(agent.plan);
+    if (["Trenches", "Prediction markets"].includes(plan.category))
+      throw new Error(
+        "This category requires its trading-platform integration before testing or execution.",
+      );
     if (input.amountUsd > plan.maxTradeUsd)
       throw new Error("Trade exceeds the agent’s maximum size.");
     const snapshot = await market();

@@ -66,3 +66,10 @@ The AgentRouter organisation must contain a Supabase **project** before database
 Set `AGENT_TOKEN_MINT` to the verified official standard SPL token mint after launch. The rental checkout reads decimals from that mint, computes exact base units, builds a checked token transfer to the creator's associated token account, and verifies the mint, recipient, signer, amount, timestamp, and checkout memo before activating timed access. SOL is needed only for transaction fees and any recipient account creation. Token-2022 mints require a separate extension-aware implementation before activation.
 
 Demo marketplace agents are illustrative, have no performance claims, and cannot be rented. Avatar selection and colour are validated and saved with real drafts. Trading platform logos link out to their sites; direct account/trading integrations are planned and are not enabled.
+
+
+## Gemini builder
+
+`GEMINI_API_KEY` is server-only. The architect uses Gemini 2.5 Flash by default (`GEMINI_BUILDER_MODEL` can override it). Wallet sign-in is required. Per-user and global daily limits bound platform usage. Its input includes the complete live model catalogue and reusable strategy templates. Output is JSON-schema constrained and independently checked against Zod risk bounds and model IDs. The architect has no code execution, wallet signing, network tools or access to provider keys in its prompt. Topic instructions and injection filters reduce misuse but cannot guarantee immunity to every jailbreak. The chat reveals concise answers with a typewriter effect after the validated response arrives; it is not provider-token streaming.
+
+Trenches and Prediction markets are configurable research templates. Trading/testing for those categories is blocked until market-specific data and execution adapters are implemented. Terminal and prediction-platform buttons currently open their sites; they do not connect user accounts. Only genuine user-created listings are shown in the marketplace.

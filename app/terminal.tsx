@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSession, signIn, signOut } from "next-auth/react";
 import { Transaction, VersionedTransaction, Connection } from "@solana/web3.js";
 import bs58 from "bs58";
+import { ChatText, Thinking } from "./chat-text";
 import AgentAvatar, { avatarNames } from "./agent-avatar";
 import {
   Plus,
@@ -39,7 +40,6 @@ type Agent = {
   models?: Plan["models"];
   listed?: boolean;
   paper_samples?: number;
-  demo?: boolean;
   avatar?: number;
   avatar_color?: string;
   hourly_agent?: string | number;
@@ -142,6 +142,7 @@ export default function Terminal() {
   const [catalogue, setCatalogue] = useState<Model[]>([]);
   const [status, setStatus] = useState({
     tokenPayments: false,
+    builder: false,
     database: false,
     inference: false,
     trading: false,
@@ -154,6 +155,8 @@ export default function Terminal() {
   const [plan, setPlan] = useState<Plan>(defaultPlan);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
+  const [modelReasons, setModelReasons] = useState<Record<string, string>>({});
+  const [chatBusy, setChatBusy] = useState(false);
   const [architect, setArchitect] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [wallet, setWallet] = useState("");
@@ -343,7 +346,12 @@ export default function Terminal() {
     );
   }
   async function send() {
-    if (!draft.trim() || !architect) return;
+    if (!draft.trim() || chatBusy) return;
+    if (!session) {
+      setModal("login");
+      return;
+    }
+    setChatBusy(true);
     const next = [...messages, { role: "user" as const, content: draft }].slice(
       -20,
     );
@@ -351,27 +359,24 @@ export default function Terminal() {
     setDraft("");
     await action(async () => {
       const r = await api("/api/builder", {
-        model: architect,
         messages: next,
-        apiKey: apiKey || undefined,
+        plan,
       });
       setMessages([...next, { role: "assistant", content: r.output }]);
-      const json = r.output.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (json) {
-        try {
-          const proposed = planSchema.parse(JSON.parse(json[1]));
-          const allowed = Object.values(proposed.models).every((id) =>
+      if (r.plan) {
+        const proposed = planSchema.parse(r.plan);
+        if (
+          Object.values(proposed.models).every((id) =>
             catalogue.some((m) => m.id === id),
-          );
-          if (allowed) {
-            setPlan(proposed);
-            setNotice(
-              "Strategy and model roles proposed. Review them before saving.",
-            );
-          }
-        } catch {}
+          )
+        ) {
+          setPlan(proposed);
+          setModelReasons(r.reasons || {});
+          setConfigTab("Models");
+        }
       }
     });
+    setChatBusy(false);
   }
   async function save() {
     if (!session) {
@@ -404,9 +409,9 @@ export default function Terminal() {
         avatar_color: avatarColor,
       };
       setSelected(a);
-      setView("Test & trade");
+      setView("My agents");
       setRuns([]);
-      setNotice("Draft saved. Run five forward tests before publishing.");
+      setNotice("Agent saved. Open Test & manage to test and publish it.");
     });
   }
   async function openAgent(a: Agent) {
@@ -509,14 +514,10 @@ export default function Terminal() {
                 <div>
                   <strong className="ar-section-label">Agent builder</strong>
                 </div>
-                <button
-                  className="at-model-button"
-                  onClick={() => picker("architect")}
-                >
-                  <ProviderIcon provider={architect.split("/")[0]} />
-                  {modelName(architect)}
-                  <ChevronDown size={13} />
-                </button>
+                <span className="ar-builder-provider">
+                  <ProviderIcon provider="google" />
+                  Gemini architect
+                </span>
               </div>
               <div className="at-messages">
                 {!messages.length ? (
@@ -532,7 +533,8 @@ export default function Terminal() {
                       {[
                         "Build a cautious SOL momentum agent",
                         "Help me manage SOL and USDC exposure",
-                        "Compare models for a research-first strategy",
+                        "Build a prediction-market research agent",
+                        "Build a Trenches discovery agent",
                       ].map((t) => (
                         <button key={t} onClick={() => setDraft(t)}>
                           {t}
@@ -548,20 +550,17 @@ export default function Terminal() {
                         {m.role === "user" ? "You" : "AgentRouter architect"}
                       </span>
                       <div>
-                        {m.content.replace(
-                          /```(?:json)?[\s\S]*?```/g,
-                          "Strategy proposal added to the configuration panel →",
-                        )}
+                        <ChatText
+                          text={m.content}
+                          animate={
+                            m.role === "assistant" && i === messages.length - 1
+                          }
+                        />
                       </div>
                     </article>
                   ))
                 )}
-                {busy && (
-                  <div className="at-thinking">
-                    <LoaderCircle size={16} className="spin" /> Building your
-                    intelligence…
-                  </div>
-                )}
+                {chatBusy && <Thinking />}
                 <div ref={chatEnd} />
               </div>
               <form
@@ -580,13 +579,13 @@ export default function Terminal() {
                 />
                 <div>
                   <span>
-                    {apiKey || status.inference
-                      ? "AI access connected"
-                      : "Add a model access key in Settings"}
+                    {chatBusy
+                      ? "Architect is thinking…"
+                      : "Powered by Gemini · Strategy and model selection"}
                   </span>
                   <button
                     aria-label="Send message"
-                    disabled={busy || !draft.trim() || !architect}
+                    disabled={chatBusy || !draft.trim() || !status.builder}
                   >
                     <ArrowUp size={18} />
                   </button>
@@ -596,7 +595,13 @@ export default function Terminal() {
             <section className="at-configuration">
               <div className="at-config-title">
                 <span className="av-eyebrow">YOUR AGENT BLUEPRINT</span>
-                <span className="at-pill">Draft</span>
+                <span className="at-pill">
+                  {chatBusy
+                    ? "Reviewing"
+                    : plan.name
+                      ? "Configured"
+                      : "New agent"}
+                </span>
               </div>
 
               <div className="ar-config-tabs">
@@ -696,6 +701,8 @@ export default function Terminal() {
                           "Momentum",
                           "DeFi",
                           "Risk management",
+                          "Trenches",
+                          "Prediction markets",
                         ].map((c) => (
                           <option key={c}>{c}</option>
                         ))}
@@ -726,6 +733,14 @@ export default function Terminal() {
                               : s[0].toUpperCase() + s.slice(1)}
                           </strong>
                           <small>{modelName(plan.models[s])}</small>
+                          {modelReasons[s] && (
+                            <p
+                              className="ar-model-reason"
+                              title={modelReasons[s]}
+                            >
+                              {modelReasons[s]}
+                            </p>
+                          )}
                         </div>
                         <ProviderIcon provider={plan.models[s].split("/")[0]} />
                         <ChevronDown size={12} />
@@ -804,7 +819,7 @@ export default function Terminal() {
                 disabled={busy}
                 onClick={save}
               >
-                Save & test agent <ArrowUpRight size={16} />
+                Save agent <ArrowUpRight size={16} />
               </button>
               <small className="at-footnote">
                 A saved draft needs five recorded forward tests before listing.
@@ -817,18 +832,24 @@ export default function Terminal() {
           <main className="at-content">
             <div className="ar-market-toolbar">
               <div className="ar-category-tabs" aria-label="Agent categories">
-                {["All", "Research", "Momentum", "DeFi", "Risk management"].map(
-                  (c) => (
-                    <button
-                      key={c}
-                      className={category === c ? "active" : ""}
-                      aria-pressed={category === c}
-                      onClick={() => setCategory(c)}
-                    >
-                      {c}
-                    </button>
-                  ),
-                )}
+                {[
+                  "All",
+                  "Research",
+                  "Momentum",
+                  "DeFi",
+                  "Risk management",
+                  "Trenches",
+                  "Prediction markets",
+                ].map((c) => (
+                  <button
+                    key={c}
+                    className={category === c ? "active" : ""}
+                    aria-pressed={category === c}
+                    onClick={() => setCategory(c)}
+                  >
+                    {c}
+                  </button>
+                ))}
               </div>
               <label className="ar-agent-search">
                 <Search size={16} />
@@ -964,17 +985,34 @@ export default function Terminal() {
                         className="at-outline at-full"
                         onClick={() =>
                           view === "Marketplace"
-                            ? (setSelected(a), setModal("rent"))
+                            ? (setSelected(a), setView("Agent details"))
                             : openAgent(a)
                         }
                       >
                         {view === "Marketplace"
-                          ? a.demo
-                            ? "Preview agent"
-                            : "Rent agent"
+                          ? "Preview agent"
                           : "Test & manage"}
                         <ArrowUpRight size={15} />
                       </button>
+                      {view === "My agents" && !a.listed && (
+                        <button
+                          className="at-outline at-full"
+                          disabled={busy}
+                          onClick={() =>
+                            action(async () => {
+                              await api(
+                                "/api/agents",
+                                { id: a.id, listed: true },
+                                "PATCH",
+                              );
+                              await refresh();
+                              setNotice("Agent listed on the marketplace.");
+                            })
+                          }
+                        >
+                          List for rental <ArrowUpRight size={14} />
+                        </button>
+                      )}
                       {view === "My agents" && a.listed && (
                         <button
                           className="at-unlist"
@@ -997,6 +1035,145 @@ export default function Terminal() {
                   ))}
               </div>
             )}
+          </main>
+        )}
+        {view === "Agent details" && selected && (
+          <main className="at-content ar-agent-detail">
+            <button className="av-link" onClick={() => setView("Marketplace")}>
+              <ArrowLeft size={16} />
+              Marketplace
+            </button>
+            <div className="ar-detail-hero">
+              <AgentAvatar
+                variant={selected.avatar}
+                color={selected.avatar_color}
+              />
+              <div>
+                <span className="at-pill">{selected.category}</span>
+                <h1>{selected.name}</h1>
+                <p>{selected.description}</p>
+              </div>
+              <div className="ar-detail-price">
+                <strong>{Number(selected.hourly_agent || 0)} $AGENT</strong>
+                <span>per hour</span>
+                <button className="av-button" onClick={() => setModal("rent")}>
+                  Rent this agent <ArrowUpRight size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="ar-detail-grid">
+              <section className="at-panel">
+                <h2>Model lineup</h2>
+                {stages.map((s) => (
+                  <div className="ar-detail-model" key={s}>
+                    <ProviderIcon
+                      provider={
+                        (
+                          selected.models?.[s] ||
+                          selected.plan?.models[s] ||
+                          ""
+                        ).split("/")[0]
+                      }
+                    />
+                    <span>
+                      {s === "execution" ? "Execution planning" : s}
+                      <strong>
+                        {modelName(
+                          selected.models?.[s] ||
+                            selected.plan?.models[s] ||
+                            "",
+                        )}
+                      </strong>
+                    </span>
+                  </div>
+                ))}
+              </section>
+              <section className="at-panel">
+                <h2>Rental details</h2>
+                <p>
+                  1–168 hours of access. Payment goes directly to the creator.
+                  Trading funds remain in your wallet.
+                </p>
+                <div className="ar-card-risk">
+                  <span>
+                    {selected.paper_samples || 0} recorded forward tests
+                  </span>
+                  <span>
+                    Max $
+                    {selected.risk?.maxTradeUsd ||
+                      selected.plan?.maxTradeUsd ||
+                      "—"}{" "}
+                    per trade
+                  </span>
+                  <span>
+                    {selected.risk?.slippageBps ||
+                      selected.plan?.slippageBps ||
+                      "—"}{" "}
+                    bps slippage
+                  </span>
+                  <span>
+                    {selected.risk?.stopLossPct ||
+                      selected.plan?.stopLossPct ||
+                      "—"}
+                    % paper loss limit
+                  </span>
+                </div>
+                <small className="at-footnote">
+                  Tests are observations, not a guarantee of future returns.
+                  Live execution currently supports wallet-approved SOL/USDC
+                  swaps.
+                </small>
+              </section>
+            </div>
+            <section className="at-panel">
+              <h2>Your trading platforms</h2>
+              <p className="at-footnote">
+                Open a platform below. Direct agent connections require a
+                supported integration and are not enabled yet.
+              </p>
+              <div className="ar-detail-terminals">
+                {[
+                  {
+                    name: "Axiom",
+                    url: "https://axiom.trade",
+                    logo: "axiom.svg",
+                  },
+                  { name: "GMGN", url: "https://gmgn.ai", logo: "gmgn.ico" },
+                  {
+                    name: "Pump Terminal",
+                    url: "https://trade.padre.gg",
+                    logo: "pump.svg",
+                  },
+                  {
+                    name: "Fomo",
+                    url: "https://fomo.family",
+                    logo: "fomo.svg",
+                  },
+                  {
+                    name: "Polymarket",
+                    url: "https://polymarket.com",
+                    logo: "polymarket.svg",
+                  },
+                  {
+                    name: "Kalshi",
+                    url: "https://kalshi.com",
+                    logo: "kalshi.png",
+                  },
+                ].map((t) => (
+                  <a
+                    key={t.name}
+                    href={t.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="at-outline"
+                  >
+                    <img src={`/terminals/${t.logo}`} alt="" />
+                    {t.name}
+                    <ArrowUpRight size={14} />
+                  </a>
+                ))}
+              </div>
+            </section>
           </main>
         )}
         {view === "Rentals" && (
@@ -1089,12 +1266,328 @@ export default function Terminal() {
         )}
         {view === "Test & trade" && selected && (
           <main className="at-content">
+            <div className="at-page-heading">
+              <div>
+                <span className="av-eyebrow">
+                  TEST THE THINKING. REVIEW THE TRADE.
+                </span>
+                <h1>{selected.name}</h1>
+                <p>SOL / USDC · Four model roles · Wallet-approved execution</p>
+              </div>
+              <button
+                className="at-outline"
+                onClick={() => setView("My agents")}
+              >
+                <ArrowLeft size={15} /> My agents
+              </button>
+            </div>
+            <div className="at-test-layout">
+              <section className="at-test-main">
+                <div className="at-panel">
+                  <div className="at-panel-heading">
+                    <div>
+                      <span className="av-eyebrow">FORWARD PAPER TEST</span>
+                      <h2>Evidence before execution.</h2>
+                    </div>
+                    <FlaskConical size={23} />
+                  </div>
+                  <p>
+                    Start with $10,000 simulated cash. Each test uses a fresh
+                    SOL spot price, records the model decision, and applies a 10
+                    bps simulated fee. These are forward observations, not
+                    historical backtests.
+                  </p>
+                  <div className="at-metrics">
+                    <div>
+                      <small>Paper equity</small>
+                      <strong>
+                        $
+                        {Number(runs[0]?.equity ?? 10000).toLocaleString(
+                          undefined,
+                          { maximumFractionDigits: 2 },
+                        )}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Recorded samples</small>
+                      <strong>{runs.length}</strong>
+                    </div>
+                    <div>
+                      <small>Simulated return</small>
+                      <strong>
+                        {(
+                          (Number(runs[0]?.equity ?? 10000) / 10000 - 1) *
+                          100
+                        ).toFixed(2)}
+                        %
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="at-actions">
+                    <button
+                      className="av-button"
+                      disabled={busy}
+                      onClick={() =>
+                        action(async () => {
+                          await api("/api/paper", {
+                            agentId: selected.id,
+                            apiKey: apiKey || undefined,
+                          });
+                          setRuns(
+                            await api("/api/paper?agentId=" + selected.id),
+                          );
+                        })
+                      }
+                    >
+                      {busy ? (
+                        <LoaderCircle className="spin" size={16} />
+                      ) : (
+                        <FlaskConical size={16} />
+                      )}{" "}
+                      Run a forward test
+                    </button>
+                    {selected.plan && (
+                      <button
+                        className="at-outline"
+                        disabled={busy || runs.length < 5}
+                        onClick={() =>
+                          action(async () => {
+                            await api(
+                              "/api/agents",
+                              { id: selected.id, listed: true },
+                              "PATCH",
+                            );
+                            setSelected({ ...selected, listed: true });
+                            setNotice(
+                              "Your tested agent is listed on the marketplace.",
+                            );
+                          })
+                        }
+                      >
+                        {selected.listed ? "Published" : "Publish agent"}{" "}
+                        <ArrowUpRight size={15} />
+                      </button>
+                    )}
+                  </div>
+                  {runs[0] && (
+                    <div className="at-reports">
+                      {["research", "reasoning", "decision", "execution"].map(
+                        (s) => (
+                          <details key={s}>
+                            <summary>
+                              {s === "execution"
+                                ? "Execution planning"
+                                : s[0].toUpperCase() + s.slice(1)}{" "}
+                              <ChevronDown size={13} />
+                            </summary>
+                            <p>
+                              {
+                                runs[0].report[
+                                  s as keyof Run["report"]
+                                ] as string
+                              }
+                            </p>
+                          </details>
+                        ),
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="at-panel">
+                  <h2>Recorded paper activity</h2>
+                  {!runs.length ? (
+                    <p>Your first forward sample will appear here.</p>
+                  ) : (
+                    <div className="at-table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Time</th>
+                            <th>Decision</th>
+                            <th>SOL price</th>
+                            <th>Trade size</th>
+                            <th>Equity</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {runs.map((r) => (
+                            <tr key={r.id}>
+                              <td>
+                                {new Date(r.created_at).toLocaleTimeString()}
+                              </td>
+                              <td>
+                                <span className={"at-action-label " + r.action}>
+                                  {r.action}
+                                </span>
+                              </td>
+                              <td>${Number(r.price).toFixed(2)}</td>
+                              <td>${Number(r.amount_usd).toFixed(2)}</td>
+                              <td>${Number(r.equity).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </section>
+              <section className="at-live-panel at-panel">
+                <div className="at-panel-heading">
+                  <span className="av-eyebrow">LIVE MAINNET TRADING</span>
+                  <ShieldCheck size={21} />
+                </div>
+                <h2>
+                  Your wallet.
+                  <br />
+                  Your final say.
+                </h2>
+                <p>
+                  Ask your agent to analyse your SOL and USDC balances. Review
+                  its recommendation, get a live quote, then sign in your wallet
+                  to execute.
+                </p>
+                <div className="at-live-steps">
+                  <span>
+                    <i>1</i> Generate a decision
+                  </span>
+                  <span>
+                    <i>2</i> Review the live quote
+                  </span>
+                  <span>
+                    <i>3</i> Approve in your wallet
+                  </span>
+                </div>
+                <button
+                  className="at-outline at-full"
+                  disabled={busy}
+                  onClick={() =>
+                    action(async () => {
+                      const address = wallet || (await connect());
+                      setQuote(null);
+                      setDecision(
+                        await api("/api/decide", {
+                          agentId: selected.id,
+                          wallet: address,
+                          apiKey: apiKey || undefined,
+                        }),
+                      );
+                    })
+                  }
+                >
+                  {busy ? "Analysing…" : "Analyse connected wallet"}{" "}
+                  <BrainCircuit size={16} />
+                </button>
+                {decision && (
+                  <div className="at-decision">
+                    <span
+                      className={"at-action-label " + decision.decision.action}
+                    >
+                      {decision.decision.action}
+                    </span>
+                    <strong>${decision.decision.amountUsd.toFixed(2)}</strong>
+                    <p>{decision.decision.reason}</p>
+                    <small>
+                      SOL ${decision.snapshot.price.toFixed(2)} ·
+                      Wallet-controlled
+                    </small>
+                    {decision.decision.action !== "hold" && (
+                      <button
+                        className="av-button at-full"
+                        disabled={busy}
+                        onClick={() =>
+                          action(async () => {
+                            const address = wallet || (await connect());
+                            setQuote(
+                              await api("/api/trade", {
+                                agentId: selected.id,
+                                wallet: address,
+                                action: decision.decision.action,
+                                amountUsd: decision.decision.amountUsd,
+                              }),
+                            );
+                            setQuoteTime(Date.now());
+                          })
+                        }
+                      >
+                        Get live swap quote <ArrowUpRight size={15} />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {quote && (
+                  <div className="at-quote">
+                    <h3>Review before signing</h3>
+                    <p>
+                      {quote.action === "buy"
+                        ? "Buy SOL with USDC"
+                        : "Sell SOL for USDC"}{" "}
+                      · ${quote.amountUsd.toFixed(2)}
+                    </p>
+                    <p>
+                      Slippage limit: {(quote.slippageBps / 100).toFixed(2)}%
+                      <br />
+                      Quote expires after 60 seconds. Network and routing fees
+                      apply.
+                    </p>
+                    <button
+                      className="av-button at-full"
+                      disabled={busy}
+                      onClick={() =>
+                        action(async () => {
+                          if (Date.now() - quoteTime > 60000)
+                            throw new Error(
+                              "Quote expired. Request a fresh quote.",
+                            );
+                          const signed = await walletProvider().signTransaction(
+                            VersionedTransaction.deserialize(
+                              Uint8Array.from(atob(quote.transaction), (c) =>
+                                c.charCodeAt(0),
+                              ),
+                            ),
+                          );
+                          const signedTransaction = btoa(
+                            String.fromCharCode(...signed.serialize()),
+                          );
+                          const r = await api("/api/trade", {
+                            id: quote.id,
+                            signedTransaction,
+                          });
+                          setQuote(null);
+                          setDecision(null);
+                          setNotice(`Swap confirmed: ${r.signature}`);
+                        })
+                      }
+                    >
+                      <Wallet size={16} /> Approve live trade
+                    </button>
+                  </div>
+                )}
+                <small className="at-footnote">
+                  Your main wallet is never given unattended signing access.
+                  Every live swap requires approval. Stop-loss settings govern
+                  paper tests; they do not create an on-chain stop order.
+                </small>
+              </section>
+            </div>
+          </main>
+        )}
+        {view === "Settings" && (
+          <main className="at-content at-settings">
+            <div className="at-page-heading">
+              <div>
+                <span className="av-eyebrow">MAKE IT YOURS</span>
+                <h1>Workspace settings.</h1>
+                <p>
+                  Connect your model access and review your trading environment.
+                </p>
+              </div>
+            </div>
             <section className="at-panel">
               <h2>AI model access</h2>
               <p>
-                Add your access key to power the architect and agent models. The
-                key stays in page memory and is sent only when you request a
-                model response. Reloading clears it.
+                Gemini powers the architect. Add a model access key for strategy
+                tests. The key stays in page memory and is sent only when you
+                request a model response. Reloading clears it.
               </p>
               <label>
                 Model access key
@@ -1334,9 +1827,7 @@ export default function Terminal() {
                     variant={selected.avatar}
                     color={selected.avatar_color}
                   />
-                  <span className="av-eyebrow">
-                    {selected.demo ? "DEMO AGENT PREVIEW" : "RENT INTELLIGENCE"}
-                  </span>
+                  <span className="av-eyebrow">RENT INTELLIGENCE</span>
                   <h2 id="at-dialog-title">{selected.name}</h2>
                   <p>{selected.description}</p>
                   <label>
@@ -1364,16 +1855,14 @@ export default function Terminal() {
                     wallet. Live swaps use real mainnet assets and require your
                     approval. Access starts after payment verification.
                   </p>
-                  {(!status.tokenPayments || selected.demo) && (
-                    <p className="ar-demo-label">
-                      {selected.demo
-                        ? "This is an illustrative demo. No trades or payments are available."
-                        : "$AGENT rentals open after token launch."}
+                  {!status.tokenPayments && (
+                    <p className="ar-availability">
+                      Token checkout opens when $AGENT is configured.
                     </p>
                   )}
                   <button
                     className="av-button at-full"
-                    disabled={busy || selected.demo || !status.tokenPayments}
+                    disabled={busy || !status.tokenPayments}
                     onClick={() =>
                       !session
                         ? setModal("login")

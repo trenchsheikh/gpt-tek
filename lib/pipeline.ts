@@ -7,6 +7,10 @@ export async function pipeline(
   key?: string,
 ) {
   const p = planSchema.parse(agent.plan);
+  if (["Trenches", "Prediction markets"].includes(p.category))
+    throw new Error(
+      "This category requires its trading-platform integration before testing or execution.",
+    );
   const reports: Record<string, string> = {};
   let context = `Strategy: ${agent.strategy}\nLive snapshot: ${JSON.stringify(snapshot)}\nWallet/paper balances: ${JSON.stringify(balance)}. You have no additional market data or execution privileges.`;
   for (const stage of ["research", "reasoning", "decision"] as const) {

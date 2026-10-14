@@ -17,7 +17,7 @@ export default function Page() {
       <header className="av-nav">
         <Link href="/" className="av-brand">
           <img src="/avelis-logo.png" alt="AgentRouter" />
-          AgentRouter<span className="av-beta">BETA</span>
+          AgentRouter
         </Link>
         <nav>
           <a href="#intelligence">Intelligence</a>
@@ -196,7 +196,7 @@ export default function Page() {
               {
                 n: "01",
                 t: "Choose your intelligence",
-                d: "Review the strategy, model roles, trade limits and test history. Demo agents are clearly marked.",
+                d: "Review the strategy, model roles, trade limits and test history. Review the creator’s configuration before you rent.",
               },
               {
                 n: "02",
@@ -249,6 +249,12 @@ export default function Page() {
                 url: "https://trade.padre.gg",
               },
               { name: "Fomo", logo: "fomo.svg", url: "https://fomo.family" },
+              {
+                name: "Polymarket",
+                logo: "polymarket.svg",
+                url: "https://polymarket.com",
+              },
+              { name: "Kalshi", logo: "kalshi.png", url: "https://kalshi.com" },
             ].map((t) => (
               <a href={t.url} key={t.name} target="_blank" rel="noreferrer">
                 <img src={`/terminals/${t.logo}`} alt="" />

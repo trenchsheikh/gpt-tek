@@ -9,7 +9,14 @@ export const planSchema = z.object({
   name: z.string().min(3).max(60),
   description: z.string().min(10).max(300),
   strategy: z.string().min(30).max(8000),
-  category: z.enum(["Research", "Momentum", "DeFi", "Risk management"]),
+  category: z.enum([
+    "Research",
+    "Momentum",
+    "DeFi",
+    "Risk management",
+    "Trenches",
+    "Prediction markets",
+  ]),
   models: z.object({
     research: z.string().min(1),
     reasoning: z.string().min(1),
